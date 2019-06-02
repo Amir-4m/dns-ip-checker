@@ -1,0 +1,5 @@
+www.varzesh3.com ip: 94.182.163.52 result: Successful
+www.google.com ip: 216.58.208.36 result: Successful
+zoomit.ir ip: 185.143.232.5 result: Unsuccessful
+bama.ir ip: 185.143.232.5 result: Unsuccessful
+github.com ip: 140.82.118.3 result: Successful
