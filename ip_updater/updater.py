@@ -15,7 +15,7 @@ def domain_updater(domain, ip):
         'Content-Type': 'application/json',
     }
 
-    data = f'{"type":"A","name":"{domain}","content":"127.0.0.1","ttl":{},"proxied":false}'
+    data = f'{"type":"A","name":"{domain}","content":"{ip}","ttl":{},"proxied":false}'
 
     try:
         req = requests.put(url, headers=headers, data=data)
@@ -23,7 +23,7 @@ def domain_updater(domain, ip):
         if req.status_code != 200:
             print(req.text)
             raise Exception('Recieved non 200 response while sending response to Cloudflare.')
-        return 'ip set'
+        return True
 
     except requests.exceptions.RequestException as e:
         print(e)
