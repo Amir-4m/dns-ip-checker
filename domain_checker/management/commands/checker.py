@@ -6,7 +6,7 @@ from django.core.management.base import BaseCommand
 
 from domain_checker.models import DomainList
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('domain_ping_checker')
 
 
 class Command(BaseCommand):

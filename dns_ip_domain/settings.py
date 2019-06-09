@@ -16,7 +16,6 @@ from .local_settings import *
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-LOGGING_DIR = os.path.join(BASE_DIR, 'logs')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.11/howto/deployment/checklist/
@@ -119,10 +118,19 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
+LOG_DIR = os.path.join(BASE_DIR, 'logs')
 LOGGING = ({
     'version': 1,
     'disable_existing_loggers': False,
     'formatters': {
+        'simple': {
+            'format': '[%(asctime)s] %(levelname)s %(message)s',
+            'datefmt': '%Y-%m-%d %H:%M:%S'
+        },
+        'verbose': {
+            'format': '[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s',
+            'datefmt': '%Y-%m-%d %H:%M:%S'
+        },
         'console': {
             'format': '%(name)-12s %(levelname)-8s %(message)s'
         },
@@ -140,11 +148,11 @@ LOGGING = ({
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
             'formatter': 'file',
-            'filename': os.path.join(LOGGING_DIR, 'ip.log'),
+            'filename': os.path.join(LOG_DIR, 'django.log'),
         }
     },
     'loggers': {
-        '': {
+        'domain_pinger': {
             'level': 'DEBUG',
             'handlers': ['console', 'file']
         }
