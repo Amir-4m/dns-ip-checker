@@ -14,14 +14,16 @@ class DomainName(models.Model):
 
 
 class DomainPingLog(models.Model):
-    created_time = models.DateTimeField(auto_now_add=True)
-    domain = models.ForeignKey(DomainName, on_delete=models.CASCADE)
-    latency = models.CharField(max_length=5)
     ip = models.CharField(max_length=15)
-    is_success = models.BooleanField()
+    domain = models.ForeignKey(DomainName, on_delete=models.CASCADE)
+    created_time = models.DateTimeField(auto_now_add=True)
+    latency = models.FloatField(null=True)
+    success_percentage = models.IntegerField()
+    is_ping = models.BooleanField()
+    ping_code = models.IntegerField()
 
     class Meta:
         db_table = 'ping_checker_domain_log'
 
     def __str__(self):
-        return " ".join([self.domain.domain, self.ip, self.is_success])
+        return " ".join([self.domain.domain, self.ip])

@@ -134,10 +134,10 @@ LOGGING = ({
         'console': {
             'format': '%(name)-12s %(levelname)-8s %(message)s'
         },
-        'file': {
-            # 'format': '%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
-            'format': '%(asctime)s %(message)s'
-        }
+        # 'file': {
+        #     # 'format': '%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
+        #     'format': '%(asctime)s %(message)s'
+        # }
     },
     'handlers': {
         'console': {
@@ -147,7 +147,7 @@ LOGGING = ({
         'file': {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
-            'formatter': 'file',
+            'formatter': 'verbose',
             'filename': os.path.join(LOG_DIR, 'django.log'),
         }
     },
