@@ -30,19 +30,10 @@ class Command(BaseCommand):
                 domain=domain_objc,
                 latency=time,
                 success_percentage=100 - int(percent),
-                is_ping=True if ping == 0 else False,
+                is_ping=(ping == 0),
                 ping_code=ping,
             )
-
             log_objc.save()
+            logger.info(f"code:{ping} result:{popen}\n")
 
-            print(f"CREATED SUCCESSFULLY AS: {log_objc}")
 
-            with open("log.txt", 'a+') as file:
-                file.write(f"ping:{ping}\ndomnain:{domain_objc.domain}\nip:{ip}\n"
-                           f"package lost:{percent}%\ntime:{time}"
-                           f"ms\n-------------------------\n")
-
-            result = 'successful' if ping == 0 else 'unsuccessful'
-            logger.info(f"code:{ping} domain:{domain_objc.domain} -------- "
-                        f"ip:{ip} -------- {result.upper()}")
