@@ -134,10 +134,11 @@ LOGGING = ({
         'console': {
             'format': '%(name)-12s %(levelname)-8s %(message)s'
         },
-        # 'file': {
-        #     # 'format': '%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
-        #     'format': '%(asctime)s %(message)s'
-        # }
+        'file': {
+            # 'format': '%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
+            'format': '[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s',
+            'datefmt': '%Y-%m-%d %H:%M:%S'
+        }
     },
     'handlers': {
         'console': {
@@ -147,12 +148,12 @@ LOGGING = ({
         'file': {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
-            'formatter': 'verbose',
+            'formatter': 'file',
             'filename': os.path.join(LOG_DIR, 'django.log'),
         }
     },
     'loggers': {
-        'domain_pinger': {
+        'domain_ping_checker': {
             'level': 'DEBUG',
             'handlers': ['console', 'file']
         }
@@ -160,4 +161,3 @@ LOGGING = ({
 })
 
 logging.config.dictConfig(LOGGING)
-
