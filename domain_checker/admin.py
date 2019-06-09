@@ -7,4 +7,9 @@ class DomainNameAdmin(admin.ModelAdmin):
     list_filter = ['domain', 'created_time', 'updated_time']
 
 
+class DomainPingLogAdmin(admin.ModelAdmin):
+    list_display = ('ip', 'domain', 'ping_code', 'created_time', 'success_percentage', 'is_ping')
+
+
 admin.site.register(DomainName, DomainNameAdmin)
+admin.site.register(DomainPingLog, DomainPingLogAdmin)
