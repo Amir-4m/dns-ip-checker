@@ -3,7 +3,7 @@ from django.db import models
 
 class BankIP(models.Model):
     ip = models.CharField(max_length=20, unique=True)
-    domain = models.ForeignKey('SystemDomain', null=True)
+    domain = models.ForeignKey('SystemDomain', null=True, blank=True)
     created_time = models.DateTimeField(auto_now_add=True)
     used_date = models.DateTimeField()
 
@@ -16,6 +16,7 @@ class BankIP(models.Model):
 
 class SystemDomain(models.Model):
     domain = models.CharField(max_length=100, unique=True)
+    dns_record = models.CharField(max_length=32, null=True)
     last_modified = models.DateTimeField(auto_now=True)
 
     class Meta:
