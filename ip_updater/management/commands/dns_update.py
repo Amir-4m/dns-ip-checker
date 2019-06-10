@@ -22,3 +22,4 @@ class Command(BaseCommand):
                         domain_updater(domain_objc.domain, ip_object.ip, domain_objc.dns_record)
                         ip_object.domain = domain_objc
                         ip_object.save()
+                        print(f"{ip_object.ip} set for {domain_objc.domain}")

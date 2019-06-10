@@ -16,7 +16,7 @@ class BankIP(models.Model):
 
 class SystemDomain(models.Model):
     domain = models.CharField(max_length=100, unique=True)
-    dns_record = models.CharField(max_length=32, null=True)
+    dns_record = models.CharField(max_length=32, null=True, blank=True)
     last_modified = models.DateTimeField(auto_now=True)
 
     class Meta:
