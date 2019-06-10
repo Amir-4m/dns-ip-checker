@@ -4,7 +4,7 @@ from django.db import models
 class BankIP(models.Model):
     ip = models.CharField(max_length=20, unique=True)
     domain = models.ForeignKey('SystemDomain', null=True)
-    created_date = models.DateTimeField(auto_now_add=True)
+    created_time = models.DateTimeField(auto_now_add=True)
     used_date = models.DateTimeField()
 
     class Meta:
