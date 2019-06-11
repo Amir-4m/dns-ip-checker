@@ -4,12 +4,9 @@ import requests
 
 from ip_updater.management.commands.configs import EMAIL, ZONE_ID, API_KEY
 
+
 def domain_updater(domain, ip, dns_record):
     """
-    zone_id and dns record needed
-    my zone id : aa360c8fb795d9956cc3c50aba90f037
-    my account id : ae5fbf9df43d77b3fc1d9016e8b422cc
-    my api key : f048f81115fecc72b302c9b48d5c4bcc87bb0
     :param domain:
     :param ip:
     :return:
@@ -22,7 +19,7 @@ def domain_updater(domain, ip, dns_record):
         'Content-Type': 'application/json',
     }
 
-    data = {"type":"A", "name":domain, "content":ip, "ttl":1, "proxied":False}
+    data = {"type": "A", "name": domain, "content": ip, "ttl": 1, "proxied": False}
 
     try:
         req = requests.put(url, headers=headers, data=json.dumps(data))
