@@ -13,10 +13,6 @@ headers = {
 }
 
 
-def strip_domains(domain):
-    return domain[: domain.index('.exmple.com')]
-
-
 class Command(BaseCommand):
     help = 'check dns to add those domain not exist and update dns records'
 
