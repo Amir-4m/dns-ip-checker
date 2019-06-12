@@ -8,11 +8,11 @@ class BankIP(models.Model):
         (SERVER_1, ''),
         (SERVER_2, ''),
     )
-    ip = models.CharField(max_length=15, unique=True)
-    used_date = models.DateTimeField(null=True)
-    server = models.CharField(max_length=50, db_index=True, choices=SERVER_CHOICES)
     created_time = models.DateTimeField(auto_now_add=True)
     updated_time = models.DateTimeField(auto_now=True)
+    used_time = models.DateTimeField(null=True)
+    ip = models.CharField(max_length=15, unique=True)
+    server = models.CharField(max_length=50, db_index=True, choices=SERVER_CHOICES)
 
     class Meta:
         db_table = 'dns_bank_ip'
