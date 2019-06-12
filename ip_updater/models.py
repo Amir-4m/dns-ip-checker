@@ -8,13 +8,11 @@ class BankIP(models.Model):
         (SERVER_1, ''),
         (SERVER_2, ''),
     )
-
-    # list of domain zone objects or nothing
-
-    ip = models.CharField(max_length=20, unique=True)
+    ip = models.CharField(max_length=15, unique=True)
+    used_date = models.DateTimeField(null=True)
+    server = models.CharField(max_length=50, db_index=True, choices=SERVER_CHOICES)
     created_time = models.DateTimeField(auto_now_add=True)
-    used_date = models.DateTimeField()
-    server = models.CharField(max_length=50, db_index=True, choices=SERVER_CHOICES )
+    updated_time = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = 'dns_bank_ip'
@@ -34,13 +32,26 @@ class DomainZone(models.Model):
         return self.domain_name
 
 
+class DomainLogger(models.Model):
+    created_time = models.DateTimeField(auto_now_add=True)
+    ip = models.CharField(max_length=15, db_index=True)
+    domain = models.CharField(max_length=100)
+
+    class Meta:
+        db_table = 'dns_domain_logger'
+
+    def __str__(self):
+        return f"{self.ip} _ set for: {self.domain} at: {self.created_time}"
+
+
 class DomainNameRecord(models.Model):
-    sub_domain_name = models.CharField(max_length=20)
-    domain = models.ForeignKey(DomainZone, on_delete=models.CASCADE)
-    ip = models.ForeignKey(BankIP, on_delete=models.CASCADE)
-    dns_record = models.CharField(max_length=32, null=True, blank=True, editable=False)
     created_time = models.DateTimeField(auto_now_add=True)
     updated_time = models.DateTimeField(auto_now=True)
+    domain = models.ForeignKey(DomainZone, on_delete=models.CASCADE)
+    log = models.ForeignKey(DomainLogger, on_delete=models.CASCADE)
+    sub_domain_name = models.CharField(max_length=20)
+    ip = models.CharField(max_length=15)
+    dns_record = models.CharField(max_length=32, null=True, blank=True, editable=False)
 
     class Meta:
         db_table = 'dns_domain_records'
