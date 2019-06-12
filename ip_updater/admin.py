@@ -8,7 +8,7 @@ class ShowDomainIps(admin.TabularInline):
 
 
 class DomainAdmin(admin.ModelAdmin):
-    list_display = ('domain', 'dns_record', 'last_modified')
+    list_display = ('zone_id', 'domain', 'dns_record', 'last_modified')
 
     inlines = [ShowDomainIps]
 

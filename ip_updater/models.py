@@ -1,5 +1,7 @@
 from django.db import models
 
+from django.utils.translation import ugettext_lazy as _
+
 
 class BankIP(models.Model):
     ip = models.CharField(max_length=20, unique=True)
@@ -15,6 +17,18 @@ class BankIP(models.Model):
 
 
 class SystemDomain(models.Model):
+    ZONE_ID_1 = ''
+    ZONE_ID_2 = ''
+    ZONE_ID_3 = ''
+    ZONE_ID_4 = ''
+    ZONE_ID_CHOICES = (
+        (ZONE_ID_1, _('')),
+        (ZONE_ID_2, _('')),
+        (ZONE_ID_3, _('')),
+        (ZONE_ID_4, _('')),
+    )
+
+    zone_id = models.CharField(max_length=20, db_index=True, choices=ZONE_ID_CHOICES)
     domain = models.CharField(max_length=100, unique=True)
     dns_record = models.CharField(max_length=32, null=True, blank=True)
     last_modified = models.DateTimeField(auto_now=True)
