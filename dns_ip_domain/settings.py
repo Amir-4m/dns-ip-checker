@@ -150,13 +150,24 @@ LOGGING = ({
             'class': 'logging.FileHandler',
             'formatter': 'file',
             'filename': os.path.join(LOG_DIR, 'django.log'),
+        },
+        'file1': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'formatter': 'file',
+            'filename': os.path.join(LOG_DIR, 'update.log'),
         }
     },
     'loggers': {
         'domain_ping_checker': {
             'level': 'DEBUG',
             'handlers': ['console', 'file']
-        }
+        },
+        'domain_ip_updater': {
+            'level': 'DEBUG',
+            'handlers': ['file1']
+        },
+
     }
 })
 
