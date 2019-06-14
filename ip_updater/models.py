@@ -5,15 +5,15 @@ import jsonfield
 
 
 class BankIP(models.Model):
-    SERVER_1 = 'cloudflare'
+    SERVER_1 = 'CloudFlare'
     SERVER_2 = ''
     SERVER_CHOICES = (
-        (SERVER_1, 'cloudflare'),
+        (SERVER_1, 'CloudFlare'),
         (SERVER_2, ''),
     )
     created_time = models.DateTimeField(auto_now_add=True)
     updated_time = models.DateTimeField(auto_now=True)
-    used_time = models.DateTimeField(null=True)
+    used_time = models.DateTimeField(null=True, blank=True)
     ip = models.CharField(max_length=15, unique=True)
     server = models.CharField(max_length=50, db_index=True, choices=SERVER_CHOICES)
 

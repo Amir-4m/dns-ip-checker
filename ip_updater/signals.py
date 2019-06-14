@@ -20,6 +20,13 @@ headers = {
 
 @receiver(post_save, sender=DomainNameRecord)
 def create_record(sender, instance, created, **kwargs):
+    """
+    :param sender:
+    :param instance:
+    :param created:
+    :param kwargs:
+    :return:
+    """
     if instance._b_is_enable is True and instance.is_enable is False:
         response_data = requests.delete(
             f"https://api.cloudflare.com/client/v4/zones/{instance.domain.zone_id}/dns_records/{instance.dns_record}",
@@ -65,7 +72,7 @@ def create_record(sender, instance, created, **kwargs):
                 domain_object.log = response_log
                 domain_object.dns_record = response_data['id']
                 domain_object.save()
-                print(f'{domain_object.domain_full_name} ip:{domain_object.ip}')
+                print(f'ip:{domain_object.ip} set for:{domain_object.domain_full_name}')
 
             else:
                 pass
