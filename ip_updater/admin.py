@@ -10,8 +10,8 @@ class ShowLogsInline(admin.TabularInline):
 class DomainRecordShowInfo(admin.ModelAdmin):
     inlines = [ShowLogsInline]
     exclude = ['log']
-    list_display = ['domain', 'ip', 'sub_domain_name', 'is_enable', 'created_time', 'updated_time']
-    readonly_fields = ['domain']
+    list_display = ['sub_domain_name', 'domain', 'ip', 'is_enable', 'created_time', 'updated_time']
+    readonly_fields = []
 
 
 class ShowSubDomainInline(admin.TabularInline):

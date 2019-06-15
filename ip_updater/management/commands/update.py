@@ -8,7 +8,7 @@ import requests
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
-from .configs import *
+from ip_updater.configs import *
 from ip_updater.models import DomainNameRecord, BankIP, DomainLogger, DomainZone
 
 headers = {

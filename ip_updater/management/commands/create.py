@@ -3,7 +3,7 @@ import requests
 
 from django.core.management import BaseCommand
 
-from .configs import EMAIL, ZONE_ID, API_KEY
+from ip_updater.configs import EMAIL, ZONE_ID, API_KEY
 from ip_updater.models import SystemDomain
 
 headers = {
