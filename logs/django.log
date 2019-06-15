@@ -47,3 +47,52 @@ rtt min/avg/max/mdev = 89.368/91.354/94.772/2.228 ms
 rtt min/avg/max/mdev = 5.514/5.842/6.388/0.358 ms
 
 
+[2019-06-15 09:18:29] INFO [domain_ping_checker.handle:37] code:0 result:PING www.varzesh3.com (94.182.163.51) 56(84) bytes of data.
+
+--- www.varzesh3.com ping statistics ---
+4 packets transmitted, 4 received, 0% packet loss, time 8ms
+rtt min/avg/max/mdev = 4.218/8.244/18.143/5.742 ms
+
+
+[2019-06-15 09:18:32] INFO [domain_ping_checker.handle:37] code:0 result:PING www.google.com (172.217.169.228) 56(84) bytes of data.
+
+--- www.google.com ping statistics ---
+4 packets transmitted, 4 received, 0% packet loss, time 7ms
+rtt min/avg/max/mdev = 37.107/43.171/52.346/5.905 ms
+
+
+[2019-06-15 09:18:35] INFO [domain_ping_checker.handle:37] code:0 result:PING zoomit.ir (185.143.235.5) 56(84) bytes of data.
+
+--- zoomit.ir ping statistics ---
+4 packets transmitted, 4 received, 0% packet loss, time 6ms
+rtt min/avg/max/mdev = 4.149/10.810/22.724/7.369 ms
+
+
+[2019-06-15 09:18:38] INFO [domain_ping_checker.handle:37] code:0 result:PING bama.ir (185.143.235.5) 56(84) bytes of data.
+
+--- bama.ir ping statistics ---
+4 packets transmitted, 4 received, 0% packet loss, time 8ms
+rtt min/avg/max/mdev = 5.186/9.416/13.270/3.549 ms
+
+
+[2019-06-15 09:18:42] INFO [domain_ping_checker.handle:37] code:0 result:PING github.com (192.30.253.112) 56(84) bytes of data.
+
+--- github.com ping statistics ---
+4 packets transmitted, 4 received, 0% packet loss, time 8ms
+rtt min/avg/max/mdev = 168.272/171.092/175.424/2.645 ms
+
+
+[2019-06-15 09:19:05] INFO [domain_ping_checker.handle:37] code:512 result:PING facebook.com (10.10.34.35) 56(84) bytes of data.
+
+--- facebook.com ping statistics ---
+4 packets transmitted, 0 received, 100% packet loss, time 68ms
+
+
+
+[2019-06-15 09:19:09] INFO [domain_ping_checker.handle:37] code:0 result:PING ali.com (184.168.131.241) 56(84) bytes of data.
+
+--- ali.com ping statistics ---
+4 packets transmitted, 4 received, 0% packet loss, time 7ms
+rtt min/avg/max/mdev = 231.906/235.594/239.661/3.518 ms
+
+

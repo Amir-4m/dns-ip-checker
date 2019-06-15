@@ -1,6 +1,7 @@
 import os
 import json
 import random
+import logging
 
 import requests
 
@@ -18,12 +19,13 @@ headers = {
 
 
 class Command(BaseCommand):
-    help = 'check doamin ip and update if ping != 0'
+    help = 'check domain ip and update if ping != 0'
 
     def handle(self, *args, **options):
         domain_objects = DomainNameRecord.objects.all()
         ip_objects_that_have_ping = [ip_object for ip_object in BankIP.objects.all() if
                                      os.system("ping -c 4 -q " + ip_object.ip) == 0]
+        logger = logging.getLogger('domain_ip_updater')
 
         for domain_object in domain_objects:
             ping = os.system('ping -c 4 -q ' + domain_object.ip)
@@ -56,11 +58,10 @@ class Command(BaseCommand):
                     domain_object.ip = ip_object.ip
                     domain_object.save()
 
-                    print(response.json())
                     print(f"{ip_object.ip} set for {domain_object.domain_full_name} at {timezone.now()}")
-                else:
-                    print(f"unsuccessful")
-                    print(response.json())
+                    logger.info(f"{ip_object.ip} set for {domain_object.domain_full_name} at {timezone.now()} \n"
+                                f"{response.json()}")
+
 
 
 
@@ -74,6 +75,6 @@ class Command(BaseCommand):
     #     ping = os.system("ping -c 4 -q " + domain['content'])
     #
     #     if ping == 0:
-    #         print(f"{domain['name']} ping success ip:{domain['content']}")
+    #         print(f"{domain['name']} ping successful ip:{domain['content']}")
     #     else:
-    #         print(f"{domain['name']} ping UNsuccess ip:{domain['content']}")
+    #         print(f"{domain['name']} ping unsuccessful ip:{domain['content']}")
