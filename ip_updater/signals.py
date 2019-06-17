@@ -3,19 +3,13 @@ import json
 
 import requests
 
-from django.db.models.signals import post_save, post_delete, pre_delete
+from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 from .models import DomainNameRecord, BankIP, DomainLogger, DomainZone
 from .configs import EMAIL, API_KEY
 
 logger = logging.getLogger('domain_ip_updater')
-
-headers = {
-    'X-Auth-Email': EMAIL,
-    'X-Auth-Key': API_KEY,
-    'Content-Type': 'application/json',
-}
 
 
 @receiver(post_save, sender=DomainNameRecord)
@@ -27,59 +21,50 @@ def create_record(sender, instance, created, **kwargs):
     :param kwargs:
     :return:
     """
-    if instance._b_is_enable is True and instance.is_enable is False:
-        response_data = requests.delete(
-            f"https://api.cloudflare.com/client/v4/zones/{instance.domain.zone_id}/dns_records/{instance.dns_record}",
-            headers=headers,
-        )
-        response_log = DomainLogger(
-            ip=instance.ip,
-            domain=instance,
-            api_response=response_data.json(),
-        )
-        response_log.save()
-        instance.log = response_log
-        print(f'{instance.domain_full_name} deleted')
-    elif instance._b_ip != instance.ip:
-        get_dns_records = requests.get(
-            f'https://api.cloudflare.com/client/v4/zones/{instance.domain.zone_id}/dns_records',
-            headers=headers)
-        dns_domains = get_dns_records.json()['result']
-        panel_domains = DomainNameRecord.objects.all()
-        for domain_object in panel_domains:
-            if domain_object.domain_full_name not in list(
-                    map(lambda dns: dns['name'], dns_domains)) and domain_object.is_enable is True:
-                data = {
-                    "type": "A",
-                    "name": domain_object.sub_domain_name,
-                    "content": domain_object.ip,
-                    "ttl": 1,
-                    "proxied": False,
-                }
+    headers = {
+        'X-Auth-Email': EMAIL,
+        'X-Auth-Key': API_KEY,
+        'Content-Type': 'application/json',
+    }
 
-                response = requests.post(
-                    f"https://api.cloudflare.com/client/v4/zones/{instance.domain.zone_id}/dns_records",
-                    headers=headers,
-                    data=json.dumps(data),
-                )
-                response_data = response.json()['result']
-                response_log = DomainLogger(
-                    ip=domain_object.ip,
-                    domain=domain_object,
-                    api_response=response_data,
-                )
-                response_log.save()
-                domain_object.log = response_log
-                domain_object.dns_record = response_data['id']
-                domain_object.save()
-                print(f'ip:{domain_object.ip} set for:{domain_object.domain_full_name}')
+    data = {
+        "type": "A",
+        "name": instance.domain_full_name,
+        "content": instance.ip,
+        "ttl": 1,
+        "proxied": False,
+    }
 
-            else:
-                pass
-                # for record in dns_domains:
-                #     if domain_object.domain_full_name == record['name']:
-                #         print(record['id'])
-                #         domain_object.dns_record = record['id']
-                #         domain_object.ip = record['content']
-                #         domain_object.save()
-                #         print(f'{domain_object.domain_full_name} UPDATED! id:{domain_object.dns_record}')
+    if instance.is_enable is False:
+        url = f"https://api.cloudflare.com/client/v4/zones/{instance.domain.zone_id}/dns_records/{instance.dns_record}"
+        response_data = requests.delete(url, headers=headers).json()['result']
+        message = f"DELETED domain:{instance.domain_full_name} ip:{instance.ip}"
+
+    elif instance.is_enable is True and all(
+            [instance.b_ip is '', instance.b_sub_domain_name is '']):
+        url = f"https://api.cloudflare.com/client/v4/zones/{instance.domain.zone_id}/dns_records"
+        response_data = requests.post(url, headers=headers, data=json.dumps(data)).json()['result']
+        message = f"CREATE domain:{instance.domain_full_name} ip:{instance.ip}"
+
+    elif instance.is_enable is True and any(
+            [instance.b_ip is not '', instance.b_sub_domain_name is not '']):
+
+        if instance.b_is_enable is False and instance.is_enable is True:
+            url = f"https://api.cloudflare.com/client/v4/zones/{instance.domain.zone_id}/dns_records"
+            response_data = requests.post(url, headers=headers, data=json.dumps(data)).json()['result']
+            message = f"CREATE AGAIN domain:{instance.domain_full_name} ip:{instance.ip}"
+        else:
+            url = f"https://api.cloudflare.com/client/v4/zones/{instance.domain.zone_id}/dns_records/" \
+                f"{instance.log.api_response['id']}"
+            response_data = requests.put(url, headers=headers, data=json.dumps(data)).json()['result']
+            message = f"EDITED domain:{instance.domain_full_name} ip:{instance.ip}"
+
+    response_log = DomainLogger(
+        ip=instance.ip,
+        domain=instance,
+        api_response=response_data,
+    )
+    response_log.save()
+    DomainNameRecord.objects.filter(id=instance.id).update(log=response_log, dns_record=response_data['id'])
+
+    print(message)

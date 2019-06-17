@@ -50,8 +50,9 @@ class DomainNameRecord(models.Model):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._b_is_enable = self.is_enable
-        self._b_ip = self.ip
+        self.b_is_enable = self.is_enable
+        self.b_ip = self.ip
+        self.b_sub_domain_name = self.sub_domain_name
 
     def __str__(self):
         return f"{self.sub_domain_name}.{self.domain.domain_name} ip: {self.ip}"

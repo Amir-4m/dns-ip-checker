@@ -23,13 +23,19 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         domain_objects = DomainNameRecord.objects.all()
+        print("\nPING OUR DATABASE TO GET VALID IP's\n")
         ip_objects_that_have_ping = [ip_object for ip_object in BankIP.objects.all() if
                                      os.system("ping -c 4 -q " + ip_object.ip) == 0]
+        print("\nGOT VALID IP's FROM DATABASE\n")
+
         logger = logging.getLogger('domain_ip_updater')
+
+        print("\nSTART TO PING DNS IP's\n")
 
         for domain_object in domain_objects:
             ping = os.system('ping -c 4 -q ' + domain_object.ip)
             if ping != 0:
+                print(f"\n{domain_object.domain_full_name}:{domain_object.ip} PING UNSUCCESSFULLY NEED TO UPDATE ... ")
                 ip_object = random.choice(ip_objects_that_have_ping)
                 url = f"https://api.cloudflare.com/client/v4/zones/" \
                     f"{domain_object.domain.zone_id}/dns_records/" \
@@ -37,7 +43,7 @@ class Command(BaseCommand):
 
                 data = {
                     "type": "A",
-                    "name": domain_object.sub_domain_name,
+                    "name": domain_object.domain_full_name,
                     "content": ip_object.ip,
                     "ttl": 1,
                     "proxied": False
@@ -54,27 +60,16 @@ class Command(BaseCommand):
                         api_response=response.json()['result'],
                     )
                     logs.save()
-                    domain_object.log = logs
-                    domain_object.ip = ip_object.ip
-                    domain_object.save()
+                    DomainNameRecord.objects.filter(
+                        id=domain_object.id).update(ip=ip_object.ip,
+                                                    log=logs,
+                                                    dns_record=response.json()['result']['id'])
 
-                    print(f"{ip_object.ip} set for {domain_object.domain_full_name} at {timezone.now()}")
-                    logger.info(f"{ip_object.ip} set for {domain_object.domain_full_name} at {timezone.now()} \n"
+                    print(f"\n{ip_object.ip} SET FOR {domain_object.domain_full_name} AT {timezone.now()}\n")
+                    logger.info(f"{ip_object.ip} set for {domain_object.domain_full_name} at {timezone.now()}\n"
                                 f"{response.json()}")
+            else:
+                print(f"\n{domain_object.domain_full_name}:{domain_object.ip} PING SUCCESSFULLY DON'T NEED UPDATE\n")
 
 
-
-
-
-
-    # url = 'https://api.cloudflare.com/client/v4/zones/aa360c8fb795d9956cc3c50aba90f037/dns_records'
-    #
-    # dns_domains = requests.get(url, headers=headers).json()['result']
-    #
-    # for domain in dns_domains:
-    #     ping = os.system("ping -c 4 -q " + domain['content'])
-    #
-    #     if ping == 0:
-    #         print(f"{domain['name']} ping successful ip:{domain['content']}")
-    #     else:
-    #         print(f"{domain['name']} ping unsuccessful ip:{domain['content']}")
+        print("DONE")
