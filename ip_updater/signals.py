@@ -35,10 +35,12 @@ def create_record(sender, instance, created, **kwargs):
         "proxied": False,
     }
 
-    if instance.is_enable is False:
+    if instance.is_enable_changed() and instance.is_enable is False:
         url = f"https://api.cloudflare.com/client/v4/zones/{instance.domain.zone_id}/dns_records/{instance.dns_record}"
         response_data = requests.delete(url, headers=headers).json()['result']
         message = f"DELETED domain:{instance.domain_full_name} ip:{instance.ip}"
+
+    if instance.is_enable_changed() and instance.is_enable is True:
 
     elif instance.is_enable is True and all(
             [instance.b_ip is '', instance.b_sub_domain_name is '']):

@@ -22,10 +22,11 @@ class Command(BaseCommand):
     help = 'check domain ip and update if ping != 0'
 
     def handle(self, *args, **options):
-        domain_objects = DomainNameRecord.objects.all()
+        domain_objects = DomainNameRecord.objects.filter(is_enable=True).exclude(dns_record='')
         print("\nPING OUR DATABASE TO GET VALID IP's\n")
         ip_objects_that_have_ping = [ip_object for ip_object in BankIP.objects.all() if
                                      os.system("ping -c 4 -q " + ip_object.ip) == 0]
+        print('%s\n' % '='*82)
         print("\nGOT VALID IP's FROM DATABASE\n")
 
         logger = logging.getLogger('domain_ip_updater')
