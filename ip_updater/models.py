@@ -1,8 +1,6 @@
 from django.db import models
 from django.contrib.postgres.fields import JSONField
 
-import jsonfield
-
 
 class BankIP(models.Model):
     SERVER_1 = 'CloudFlare'
@@ -66,7 +64,7 @@ class DomainLogger(models.Model):
     created_time = models.DateTimeField(auto_now_add=True)
     ip = models.CharField(max_length=15, db_index=True)
     domain = models.ForeignKey('DomainNameRecord', on_delete=models.CASCADE)
-    api_response = jsonfield.JSONField()
+    api_response = JSONField()
 
     class Meta:
         db_table = 'dns_domain_logger'
