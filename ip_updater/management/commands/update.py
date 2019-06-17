@@ -1,12 +1,13 @@
 import os
 import json
-import random
 import logging
+from random import randint
 
 import requests
 
 from django.core.management.base import BaseCommand
 from django.utils import timezone
+from django.db.models import Max
 
 from ip_updater.configs import *
 from ip_updater.models import DomainNameRecord, BankIP, DomainLogger, DomainZone
@@ -23,21 +24,21 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         domain_objects = DomainNameRecord.objects.filter(is_enable=True).exclude(dns_record='')
-        print("\nPING OUR DATABASE TO GET VALID IP's\n")
-        ip_objects_that_have_ping = [ip_object for ip_object in BankIP.objects.all() if
-                                     os.system("ping -c 4 -q " + ip_object.ip) == 0]
-        print('%s\n' % '='*82)
-        print("\nGOT VALID IP's FROM DATABASE\n")
 
         logger = logging.getLogger('domain_ip_updater')
 
-        print("\nSTART TO PING DNS IP's\n")
+        # print('*' * 80)
+        print("START TO PING DNS IP's\n")
 
         for domain_object in domain_objects:
             ping = os.system('ping -c 4 -q ' + domain_object.ip)
             if ping != 0:
-                print(f"\n{domain_object.domain_full_name}:{domain_object.ip} PING UNSUCCESSFULLY NEED TO UPDATE ... ")
-                ip_object = random.choice(ip_objects_that_have_ping)
+                print('*' * 80)
+                print(f"{domain_object.domain_full_name}:{domain_object.ip} PING UNSUCCESSFULLY NEED TO UPDATE ... ")
+                ip_object = BankIP.objects.filter(used_time__isnull=True).first()
+                if ip_object is None:
+                    return
+
                 url = f"https://api.cloudflare.com/client/v4/zones/" \
                     f"{domain_object.domain.zone_id}/dns_records/" \
                     f"{domain_object.dns_record}"
@@ -55,22 +56,17 @@ class Command(BaseCommand):
                 if response.json()['success'] is True:
                     ip_object.used_time = timezone.now()
                     ip_object.save()
-                    logs = DomainLogger(
+                    logs = DomainLogger.objects.create(
                         ip=ip_object.ip,
                         domain=domain_object,
                         api_response=response.json()['result'],
                     )
-                    logs.save()
-                    DomainNameRecord.objects.filter(
-                        id=domain_object.id).update(ip=ip_object.ip,
-                                                    log=logs,
-                                                    dns_record=response.json()['result']['id'])
-
-                    print(f"\n{ip_object.ip} SET FOR {domain_object.domain_full_name} AT {timezone.now()}\n")
+                    DomainNameRecord.objects.filter(id=domain_object.id).update(ip=ip_object.ip)
+                    print(f"{ip_object.ip} SET FOR {domain_object.domain_full_name} AT {timezone.now()}\n")
                     logger.info(f"{ip_object.ip} set for {domain_object.domain_full_name} at {timezone.now()}\n"
                                 f"{response.json()}")
             else:
-                print(f"\n{domain_object.domain_full_name}:{domain_object.ip} PING SUCCESSFULLY DON'T NEED UPDATE\n")
-
+                print('*' * 80)
+                print(f"{domain_object.domain_full_name}:{domain_object.ip} PING SUCCESSFULLY DON'T NEED UPDATE\n")
 
         print("DONE")

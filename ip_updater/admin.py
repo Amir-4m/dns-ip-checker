@@ -26,24 +26,24 @@ class DomainRecordShowInfo(admin.ModelAdmin):
         }
 
 
-class ShowSubDomainInline(admin.TabularInline):
-    model = DomainNameRecord
-    extra = 0
-    readonly_fields = ['log', 'sub_domain_name', 'ip', 'is_enable']
+# class ShowSubDomainInline(admin.TabularInline):
+#     model = DomainNameRecord
+#     extra = 0
+#     readonly_fields = ['log', 'sub_domain_name', 'ip', 'is_enable']
+#
+#     def has_delete_permission(self, request, obj=None):
+#         return False
 
-    def has_delete_permission(self, request, obj=None):
-        return False
 
-
-class DomainZoneShowInfo(admin.ModelAdmin):
-    inlines = [ShowSubDomainInline]
-    list_display = ['domain_name', 'zone_id']
-    readonly_fields = ['domain_name', 'zone_id']
-
-    class Media:
-        css = {
-            'all': ('admin/css/my_own_admin.css',)
-        }
+# class DomainZoneShowInfo(admin.ModelAdmin):
+#     inlines = [ShowSubDomainInline]
+#     list_display = ['domain_name', 'zone_id']
+#     readonly_fields = ['domain_name', 'zone_id']
+#
+#     class Media:
+#         css = {
+#             'all': ('admin/css/my_own_admin.css',)
+#         }
 
 
 class BankIpShowInfo(admin.ModelAdmin):
@@ -63,6 +63,6 @@ class ConfigLoggerClass(admin.ModelAdmin):
 
 
 admin.site.register(BankIP, BankIpShowInfo)
-admin.site.register(DomainNameRecord, DomainRecordShowInfo)
+admin.site.register(DomainNameRecord)
 admin.site.register(DomainLogger, ConfigLoggerClass)
-admin.site.register(DomainZone, DomainZoneShowInfo)
+admin.site.register(DomainZone)

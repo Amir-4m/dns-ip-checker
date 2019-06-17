@@ -35,38 +35,36 @@ def create_record(sender, instance, created, **kwargs):
         "proxied": False,
     }
 
-    if instance.is_enable_changed() and instance.is_enable is False:
-        url = f"https://api.cloudflare.com/client/v4/zones/{instance.domain.zone_id}/dns_records/{instance.dns_record}"
-        response_data = requests.delete(url, headers=headers).json()['result']
-        message = f"DELETED domain:{instance.domain_full_name} ip:{instance.ip}"
+    if not instance.dns_record and not created:
+        return
 
-    if instance.is_enable_changed() and instance.is_enable is True:
-
-    elif instance.is_enable is True and all(
-            [instance.b_ip is '', instance.b_sub_domain_name is '']):
+    if created:
         url = f"https://api.cloudflare.com/client/v4/zones/{instance.domain.zone_id}/dns_records"
         response_data = requests.post(url, headers=headers, data=json.dumps(data)).json()['result']
-        message = f"CREATE domain:{instance.domain_full_name} ip:{instance.ip}"
+        DomainNameRecord.objects.filter(id=instance.id).update(dns_record=response_data['id'])
+        print(f"CREATE domain:{instance.domain_full_name} ip:{instance.ip}")
 
-    elif instance.is_enable is True and any(
-            [instance.b_ip is not '', instance.b_sub_domain_name is not '']):
+    elif instance.is_enable_changed() and instance.is_enable is True:  # true to false
+        url = f"https://api.cloudflare.com/client/v4/zones/{instance.domain.zone_id}/dns_records"
+        response_data = requests.post(url, headers=headers, data=json.dumps(data)).json()['result']
+        DomainNameRecord.objects.filter(id=instance.id).update(dns_record=response_data['id'])
+        print(f"CREATE domain:{instance.domain_full_name} ip:{instance.ip}")
 
-        if instance.b_is_enable is False and instance.is_enable is True:
-            url = f"https://api.cloudflare.com/client/v4/zones/{instance.domain.zone_id}/dns_records"
-            response_data = requests.post(url, headers=headers, data=json.dumps(data)).json()['result']
-            message = f"CREATE AGAIN domain:{instance.domain_full_name} ip:{instance.ip}"
-        else:
-            url = f"https://api.cloudflare.com/client/v4/zones/{instance.domain.zone_id}/dns_records/" \
-                f"{instance.log.api_response['id']}"
-            response_data = requests.put(url, headers=headers, data=json.dumps(data)).json()['result']
-            message = f"EDITED domain:{instance.domain_full_name} ip:{instance.ip}"
+    elif instance.is_enable is False:
+        url = f"https://api.cloudflare.com/client/v4/zones/{instance.domain.zone_id}/dns_records/{instance.dns_record}"
+        response_data = requests.delete(url, headers=headers).json()['result']
+        print(f"DELETED domain:{instance.domain_full_name} ip:{instance.ip}")
 
-    response_log = DomainLogger(
-        ip=instance.ip,
-        domain=instance,
-        api_response=response_data,
-    )
-    response_log.save()
-    DomainNameRecord.objects.filter(id=instance.id).update(log=response_log, dns_record=response_data['id'])
+    elif instance.domain_changed() or instance.ip_changed() and instance.is_enable is True:
+        url = f"https://api.cloudflare.com/client/v4/zones/{instance.domain.zone_id}/dns_records/" \
+            f"{instance.dns_record}"
+        response_data = requests.put(url, headers=headers, data=json.dumps(data)).json()['result']
+        print(f"EDITED domain:{instance.domain_full_name} ip:{instance.ip}")
 
-    print(message)
+    elif instance.domain_changed() or instance.ip_changed() and instance.is_enable is False:
+        # change when is_enable is false
+        return
+    else:
+        return
+
+    DomainLogger.objects.create(ip=instance.ip, domain=instance, api_response=response_data)

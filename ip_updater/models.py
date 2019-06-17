@@ -6,10 +6,9 @@ from django.contrib.postgres.fields import JSONField
 
 class BankIP(models.Model):
     SERVER_1 = 'CloudFlare'
-    SERVER_2 = ''
+
     SERVER_CHOICES = (
         (SERVER_1, 'CloudFlare'),
-        (SERVER_2, ''),
     )
     created_time = models.DateTimeField(auto_now_add=True)
     updated_time = models.DateTimeField(auto_now=True)
@@ -39,8 +38,7 @@ class DomainNameRecord(models.Model):
     created_time = models.DateTimeField(auto_now_add=True)
     updated_time = models.DateTimeField(auto_now=True)
     domain = models.ForeignKey(DomainZone, on_delete=models.CASCADE)
-    log = models.ForeignKey('DomainLogger', on_delete=models.CASCADE, null=True, blank=True)
-    sub_domain_name = models.CharField(max_length=20)
+    sub_domain_name = models.CharField(max_length=20, unique=True)
     ip = models.CharField(max_length=15)
     dns_record = models.CharField(max_length=32, blank=True, editable=False)
     is_enable = models.BooleanField(default=True)
@@ -63,20 +61,18 @@ class DomainNameRecord(models.Model):
     def domain_changed(self):
         return self._b_sub_domain_name != self.sub_domain_name
 
+    def ip_changed(self):
+        return self._b_ip != self.ip
+
     @property
     def domain_full_name(self):
         return f"{self.sub_domain_name}.{self.domain.domain_name}"
-
-    def save(self, *args, **kwargs):
-        if self._b_sub_domain_name != self.sub_domain_name:
-            self.dns_record = ''
-        super().save(*args, **kwargs)
 
 
 class DomainLogger(models.Model):
     created_time = models.DateTimeField(auto_now_add=True)
     ip = models.CharField(max_length=15, db_index=True)
-    domain = models.ForeignKey('DomainNameRecord', on_delete=models.CASCADE)
+    domain = models.ForeignKey(DomainNameRecord, on_delete=models.CASCADE)
     api_response = JSONField()
 
     class Meta:
