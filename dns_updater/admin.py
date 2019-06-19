@@ -28,6 +28,9 @@ class DomainNameRecordAdmin(admin.ModelAdmin):
     date_hierarchy = 'created_time'
     ordering = ['domain__domain_name', 'sub_domain_name']
 
+    def has_delete_permission(self, request, obj=None):
+        return False
+
 
 @admin.register(DomainLogger)
 class DomainLoggerAdmin(admin.ModelAdmin):

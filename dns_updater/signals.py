@@ -32,7 +32,7 @@ def create_record(sender, instance, created, **kwargs):
         "name": instance.domain_full_name,
         "content": instance.ip,
         "ttl": 1,
-        "proxied": False,
+        "proxied": True,
     }
 
     cloudflare_base_url = f"https://api.cloudflare.com/client/v4/zones"
