@@ -37,11 +37,7 @@ def create_record(sender, instance, created, **kwargs):
 
     cloudflare_base_url = f"https://api.cloudflare.com/client/v4/zones"
 
-    if not instance.dns_record and not created:
-        logger.warning(f"domain:{instance.domain_full_name} has no dns_record key")
-        return
-
-    if created:
+    if created and instance.is_enable:
         url = f"{cloudflare_base_url}/{instance.domain.zone_id}/dns_records"
         try:
             r = requests.post(url, headers=headers, json=data)
@@ -54,7 +50,7 @@ def create_record(sender, instance, created, **kwargs):
         else:
             logger.info(f"CREATE domain:{instance.domain_full_name} ip:{instance.ip}")
 
-    elif instance.is_enable_changed() and instance.is_enable is True:  # False -> True
+    elif instance.is_enable_changed() and instance.is_enable:  # False -> True
         url = f"{cloudflare_base_url}/{instance.domain.zone_id}/dns_records"
         try:
             r = requests.post(url, headers=headers, json=data)
@@ -67,7 +63,11 @@ def create_record(sender, instance, created, **kwargs):
         else:
             logger.info(f"CREATE domain:{instance.domain_full_name} ip:{instance.ip}")
 
-    elif instance.is_enable_changed() and instance.is_enable is False:  # True -> False
+    elif instance.is_enable_changed() and not instance.is_enable:  # True -> False
+        if not instance.dns_record:
+            logger.warning(f"domain:{instance.domain_full_name} has no dns_record key")
+            return
+
         url = f"{cloudflare_base_url}/{instance.domain.zone_id}/dns_records/{instance.dns_record}"
         try:
             r = requests.delete(url, headers=headers)
@@ -79,7 +79,11 @@ def create_record(sender, instance, created, **kwargs):
         else:
             logger.info(f"DELETE domain:{instance.domain_full_name} ip:{instance.ip}")
 
-    elif instance.is_enable is True and (instance.domain_changed() or instance.ip_changed()):
+    elif instance.is_enable and (instance.domain_changed() or instance.ip_changed()):
+        if not instance.dns_record:
+            logger.warning(f"domain:{instance.domain_full_name} has no dns_record key")
+            return
+
         url = f"{cloudflare_base_url}/{instance.domain.zone_id}/dns_records/{instance.dns_record}"
         try:
             r = requests.put(url, headers=headers, json=data)
@@ -92,6 +96,7 @@ def create_record(sender, instance, created, **kwargs):
             logger.info(f"EDIT domain:{instance.domain_full_name} ip:{instance.ip}")
 
     else:
+        logger.info(f"NO API CALLED domain:{instance.domain_full_name} ip:{instance.ip}")
         return
 
     DomainLogger.objects.create(ip=instance.ip, domain_record=instance, api_response=response_data)

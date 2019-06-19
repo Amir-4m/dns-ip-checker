@@ -22,6 +22,7 @@ class DomainZoneAdmin(admin.ModelAdmin):
 @admin.register(DomainNameRecord)
 class DomainNameRecordAdmin(admin.ModelAdmin):
     list_display = ['sub_domain_name', 'domain', 'ip', 'is_enable', 'updated_time']
+    list_editable = ['ip', 'is_enable']
     list_filter = ['is_enable', 'updated_time', 'domain']
     search_fields = ['ip', 'sub_domain_name', 'dns_record', 'domain__domain_name', 'domain__zone_id']
     date_hierarchy = 'created_time'
