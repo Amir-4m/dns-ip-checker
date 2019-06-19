@@ -5,11 +5,11 @@ import requests
 
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.conf import settings
 
 from .models import DomainNameRecord, BankIP, DomainLogger, DomainZone
-from .configs import EMAIL, API_KEY
 
-logger = logging.getLogger('domain_ip_updater')
+logger = logging.getLogger('domain.ip_updater')
 
 
 @receiver(post_save, sender=DomainNameRecord)
@@ -22,8 +22,8 @@ def create_record(sender, instance, created, **kwargs):
     :return:
     """
     headers = {
-        'X-Auth-Email': EMAIL,
-        'X-Auth-Key': API_KEY,
+        'X-Auth-Email': settings.CLOUDFLARE_EMAIL,
+        'X-Auth-Key': settings.CLOUDFLARE_API_KEY,
         'Content-Type': 'application/json',
     }
 
@@ -36,34 +36,37 @@ def create_record(sender, instance, created, **kwargs):
     }
 
     if not instance.dns_record and not created:
+        logger.warning(f"domain:{instance.domain_full_name} has no dns_record key")
         return
 
     if created:
         url = f"https://api.cloudflare.com/client/v4/zones/{instance.domain.zone_id}/dns_records"
-        response_data = requests.post(url, headers=headers, data=json.dumps(data)).json()['result']
-        DomainNameRecord.objects.filter(id=instance.id).update(dns_record=response_data['id'])
-        print(f"CREATE domain:{instance.domain_full_name} ip:{instance.ip}")
+        try:
+            r = requests.post(url, headers=headers, json=data)
+            r.raise_for_status()
+            response_data = r.json().get('result', {})
+            DomainNameRecord.objects.filter(id=instance.id).update(dns_record=response_data.get('id', ''))
+        except Exception as e:
+            logger.error(f"CREATE domain:{instance.domain_full_name} ip:{instance.ip} error: {e}")
+        else:
+            logger.info(f"CREATE domain:{instance.domain_full_name} ip:{instance.ip}")
 
-    elif instance.is_enable_changed() and instance.is_enable is True:  # true to false
+    elif instance.is_enable_changed() and instance.is_enable is True:  # False -> True
         url = f"https://api.cloudflare.com/client/v4/zones/{instance.domain.zone_id}/dns_records"
         response_data = requests.post(url, headers=headers, data=json.dumps(data)).json()['result']
         DomainNameRecord.objects.filter(id=instance.id).update(dns_record=response_data['id'])
-        print(f"CREATE domain:{instance.domain_full_name} ip:{instance.ip}")
+        logger.info(f"CREATE domain:{instance.domain_full_name} ip:{instance.ip}")
 
-    elif instance.is_enable is False:
+    elif instance.is_enable_changed() and instance.is_enable is False:  # True -> False
         url = f"https://api.cloudflare.com/client/v4/zones/{instance.domain.zone_id}/dns_records/{instance.dns_record}"
         response_data = requests.delete(url, headers=headers).json()['result']
-        print(f"DELETED domain:{instance.domain_full_name} ip:{instance.ip}")
+        logger.info(f"DELETED domain:{instance.domain_full_name} ip:{instance.ip}")
 
-    elif instance.domain_changed() or instance.ip_changed() and instance.is_enable is True:
-        url = f"https://api.cloudflare.com/client/v4/zones/{instance.domain.zone_id}/dns_records/" \
-            f"{instance.dns_record}"
+    elif instance.is_enable is True and (instance.domain_changed() or instance.ip_changed()):
+        url = f"https://api.cloudflare.com/client/v4/zones/{instance.domain.zone_id}/dns_records/{instance.dns_record}"
         response_data = requests.put(url, headers=headers, data=json.dumps(data)).json()['result']
-        print(f"EDITED domain:{instance.domain_full_name} ip:{instance.ip}")
+        logger.info(f"EDITED domain:{instance.domain_full_name} ip:{instance.ip}")
 
-    elif instance.domain_changed() or instance.ip_changed() and instance.is_enable is False:
-        # change when is_enable is false
-        return
     else:
         return
 
