@@ -1,3 +1,5 @@
-django==1.11.17
+mysqlclient
 requests
+python-memcached
 
+Django >= 2.2, < 2.3

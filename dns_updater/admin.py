@@ -1,0 +1,37 @@
+from django.contrib import admin
+
+from .models import Server, ServerIPBank, DomainZone, DomainNameRecord, DomainLogger
+
+
+@admin.register(Server)
+class ServerAdmin(admin.ModelAdmin):
+    list_display = ['name', 'created_time', 'description']
+
+
+@admin.register(ServerIPBank)
+class ServerIPBankAdmin(admin.ModelAdmin):
+    list_display = ['ip', 'used_time', 'server', 'created_time', 'updated_time']
+    list_filter = ['server']
+
+
+@admin.register(DomainZone)
+class DomainZoneAdmin(admin.ModelAdmin):
+    list_display = ['domain_name', 'zone_id']
+
+
+@admin.register(DomainNameRecord)
+class DomainNameRecordAdmin(admin.ModelAdmin):
+    list_display = ['sub_domain_name', 'domain', 'ip', 'is_enable', 'updated_time']
+    list_filter = ['is_enable', 'updated_time', 'domain']
+    search_fields = ['ip', 'sub_domain_name', 'dns_record', 'domain__domain_name', 'domain__zone_id']
+    date_hierarchy = 'created_time'
+    ordering = ['domain__domain_name', 'sub_domain_name']
+
+
+@admin.register(DomainLogger)
+class DomainLoggerAdmin(admin.ModelAdmin):
+    list_display = ['domain_record', 'ip', 'created_time']
+    list_filter = ['domain_record']
+    search_fields = ['ip', 'domain_record__sub_domain_name']
+    date_hierarchy = 'created_time'
+    ordering = ['-pk']

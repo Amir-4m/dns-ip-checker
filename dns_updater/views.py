@@ -2,7 +2,7 @@
 #
 # import requests
 #
-# from ip_updater.management.commands.configs import EMAIL, ZONE_ID, API_KEY
+# from dns_updater.management.commands.configs import EMAIL, ZONE_ID, API_KEY
 #
 #
 # def domain_updater(domain, ip, dns_record):

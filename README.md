@@ -1,27 +1,32 @@
-### local settings and configs:
+# Domain DNS Controller 
 
-local_settings.py
-
-```python
-"""
-database configs for postgres
-"""
-
-NAME = 'YOURNAME'
-USER = 'YOUR DATABASE USER'
-PASSWORD = 'YOUR DATABASE PASSWORD'
-HOST = 'localhost' 
-PORT = '5432'
-```
-
-ip_updater > configs.py 
+## local_settings.py
+Project local settings
 
 ```python
-"""
-get your API_KEY from your cloudflare profile
-"""
+DEBUG = True
+DEVEL = True
 
-EMAIL = 'YOUR EMAIL'
-API_KEY = 'YOUR API KEY'
+ALLOWED_HOSTS = []
+
+SECRET_KEY = 'SECRET KEY'
+
+DB_ENGINE = 'django.db.backends.mysql'
+DB_HOST = ''
+DB_PORT = ''
+DB_NAME = ''
+DB_USER = ''
+DB_PASS = ''
+
+CACHE_BACKEND = 'django.core.cache.backends.memcached.MemcachedCache'
+CACHE_HOST = 'localhost:11211'
+
+CELERY_BROKER_USER = 'guest'
+CELERY_BROKER_PASS = 'guest'
+CELERY_BROKER_HOST = 'localhost:5672/'
+
+STATIC_URL = '/static/'
+
+CLOUDFLARE_EMAIL = 'YOUR EMAIL'
+CLOUDFLARE_API_KEY = 'YOUR API KEY'
 ```
-

@@ -1,23 +1,28 @@
-from builtins import super
-
 from django.db import models
-from django.contrib.postgres.fields import JSONField
 
 
-class BankIP(models.Model):
-    SERVER_1 = 'CloudFlare'
+class Server(models.Model):
+    created_time = models.DateTimeField(auto_now_add=True)
+    updated_time = models.DateTimeField(auto_now=True)
+    name = models.CharField(max_length=50)
+    description = models.TextField()
 
-    SERVER_CHOICES = (
-        (SERVER_1, 'CloudFlare'),
-    )
+    class Meta:
+        db_table = 'dns_servers'
+
+    def __str__(self):
+        return self.name
+
+
+class ServerIPBank(models.Model):
     created_time = models.DateTimeField(auto_now_add=True)
     updated_time = models.DateTimeField(auto_now=True)
     used_time = models.DateTimeField(null=True, blank=True)
     ip = models.CharField(max_length=15, unique=True)
-    server = models.CharField(max_length=50, db_index=True, choices=SERVER_CHOICES)
+    server = models.ForeignKey(Server, on_delete=models.PROTECT)
 
     class Meta:
-        db_table = 'dns_bank_ip'
+        db_table = 'dns_servers_ip'
 
     def __str__(self):
         return self.ip
@@ -28,7 +33,7 @@ class DomainZone(models.Model):
     zone_id = models.CharField(max_length=32)
 
     class Meta:
-        db_table = 'dns_domain_zone'
+        db_table = 'dns_domains'
 
     def __str__(self):
         return self.domain_name
@@ -37,14 +42,14 @@ class DomainZone(models.Model):
 class DomainNameRecord(models.Model):
     created_time = models.DateTimeField(auto_now_add=True)
     updated_time = models.DateTimeField(auto_now=True)
-    domain = models.ForeignKey(DomainZone, on_delete=models.CASCADE)
+    domain = models.ForeignKey(DomainZone, on_delete=models.PROTECT)
     sub_domain_name = models.CharField(max_length=20, unique=True)
     ip = models.CharField(max_length=15)
     dns_record = models.CharField(max_length=32, blank=True, editable=False)
     is_enable = models.BooleanField(default=True)
 
     class Meta:
-        db_table = 'dns_domain_records'
+        db_table = 'dns_domains_records'
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -53,7 +58,7 @@ class DomainNameRecord(models.Model):
         self._b_sub_domain_name = self.sub_domain_name
 
     def __str__(self):
-        return f"{self.sub_domain_name}.{self.domain.domain_name} ip: {self.ip}"
+        return f"{self.sub_domain_name}.{self.domain}"
 
     def is_enable_changed(self):
         return self._b_is_enable != self.is_enable
@@ -72,11 +77,11 @@ class DomainNameRecord(models.Model):
 class DomainLogger(models.Model):
     created_time = models.DateTimeField(auto_now_add=True)
     ip = models.CharField(max_length=15, db_index=True)
-    domain = models.ForeignKey(DomainNameRecord, on_delete=models.CASCADE)
-    api_response = JSONField()
+    domain_record = models.ForeignKey(DomainNameRecord, on_delete=models.PROTECT)
+    api_response = models.TextField()
 
     class Meta:
-        db_table = 'dns_domain_logger'
+        db_table = 'dns_domains_records_logs'
 
     def __str__(self):
-        return f"{self.ip} _ set for: {self.domain.domain_full_name} at: {self.created_time}"
+        return f"{self.domain_record} {self.ip}"
