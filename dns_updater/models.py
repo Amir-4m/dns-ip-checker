@@ -5,7 +5,7 @@ class Server(models.Model):
     created_time = models.DateTimeField(auto_now_add=True)
     updated_time = models.DateTimeField(auto_now=True)
     name = models.CharField(max_length=50)
-    description = models.TextField()
+    description = models.TextField(blank=True)
 
     class Meta:
         db_table = 'dns_servers'
@@ -17,7 +17,7 @@ class Server(models.Model):
 class ServerIPBank(models.Model):
     created_time = models.DateTimeField(auto_now_add=True)
     updated_time = models.DateTimeField(auto_now=True)
-    used_time = models.DateTimeField(null=True, blank=True)
+    used_time = models.DateTimeField(null=True, editable=False)
     ip = models.CharField(max_length=15, unique=True)
     server = models.ForeignKey(Server, on_delete=models.PROTECT)
 
@@ -34,6 +34,7 @@ class DomainZone(models.Model):
 
     class Meta:
         db_table = 'dns_domains'
+        verbose_name = 'Domain'
 
     def __str__(self):
         return self.domain_name
@@ -50,6 +51,7 @@ class DomainNameRecord(models.Model):
 
     class Meta:
         db_table = 'dns_domains_records'
+        verbose_name = 'Domain Record'
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -82,6 +84,7 @@ class DomainLogger(models.Model):
 
     class Meta:
         db_table = 'dns_domains_records_logs'
+        verbose_name = 'Domain Record Log'
 
     def __str__(self):
         return f"{self.domain_record} {self.ip}"

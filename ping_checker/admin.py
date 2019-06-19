@@ -4,7 +4,7 @@ from .models import DomainName, DomainPingLog
 
 @admin.register(DomainName)
 class DomainNameAdmin(admin.ModelAdmin):
-    list_display = ('domain_name', 'created_time', 'updated_time')
+    list_display = ('domain_name', 'created_time', 'is_enable')
     list_filter = ['is_enable']
     search_fields = ['domain_name']
 

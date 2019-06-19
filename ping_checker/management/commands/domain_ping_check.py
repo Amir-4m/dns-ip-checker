@@ -1,6 +1,5 @@
 import os
 
-import logging
 from django.core.management.base import BaseCommand
 
 from ping_checker.models import DomainName, DomainPingLog
@@ -16,6 +15,9 @@ class Command(BaseCommand):
 
             self.stdout.write(f"domain: {domain_objc.domain_name}, code: {ping}, result: {popen}")
 
+            ip = ''
+            time = 0
+            percent = 100
             try:
                 ip = popen.split('\n')[0]
                 ip = ip[ip.index('(') + 1: ip.index(')')]
@@ -26,8 +28,8 @@ class Command(BaseCommand):
                 time = popen.split('\n')[-3].split(',')[3]
                 time = time[6: time.index('ms')]
             except Exception as e:
+                ping = 777
                 self.stderr.write(f"domain: {domain_objc.domain_name}, error: {e}")
-                continue
 
             DomainPingLog.objects.create(
                 ip=ip,
