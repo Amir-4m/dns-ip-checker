@@ -16,7 +16,7 @@ class DomainName(models.Model):
 
 class DomainPingLog(models.Model):
     created_time = models.DateTimeField(auto_now_add=True)
-    domain = models.ForeignKey(DomainName, on_delete=models.CASCADE)
+    domain = models.ForeignKey(DomainName, on_delete=models.PROTECT)
     ip = models.CharField(max_length=15)
     latency = models.FloatField(null=True)
     success_percentage = models.IntegerField()
@@ -27,4 +27,4 @@ class DomainPingLog(models.Model):
         db_table = 'ping_checker_domain_log'
 
     def __str__(self):
-        return " ".join([self.domain, self.ip])
+        return " ".join([str(self.domain), self.ip])

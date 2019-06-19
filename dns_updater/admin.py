@@ -31,7 +31,14 @@ class DomainNameRecordAdmin(admin.ModelAdmin):
 @admin.register(DomainLogger)
 class DomainLoggerAdmin(admin.ModelAdmin):
     list_display = ['domain_record', 'ip', 'created_time']
+    list_display_links = None
     list_filter = ['domain_record']
     search_fields = ['ip', 'domain_record__sub_domain_name']
     date_hierarchy = 'created_time'
     ordering = ['-pk']
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False

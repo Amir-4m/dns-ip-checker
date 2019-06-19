@@ -1,5 +1,6 @@
 import os
 
+from django.utils import timezone
 from django.core.management.base import BaseCommand
 
 from ping_checker.models import DomainName, DomainPingLog
@@ -9,6 +10,11 @@ class Command(BaseCommand):
     help = 'logging the result of pinging the domains and store them'
 
     def handle(self, *args, **options):
+
+        self.stdout.write(
+            f" {timezone.now().strftime('%Y-%m-%d %H:%M:%S')} START TO PING DOMAINS ".center(120, "=")
+        )
+
         for domain_objc in DomainName.objects.filter(is_enable=True):
             ping = os.system("ping -c 1 -q " + domain_objc.domain_name)
             popen = os.popen("ping -c 4 -q " + domain_objc.domain_name).read()

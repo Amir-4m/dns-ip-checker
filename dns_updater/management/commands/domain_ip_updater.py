@@ -13,7 +13,7 @@ class Command(BaseCommand):
         dns_record_list = DomainNameRecord.objects.filter(is_enable=True).exclude(dns_record='')
 
         self.stdout.write(
-            f" [{timezone.localtime().strftime('%Y-%m-%d %H:%M:%S')}] START TO PING DNS IPs".center(120, "=")
+            f" {timezone.now().strftime('%Y-%m-%d %H:%M:%S')} START TO PING DOMAINS ".center(120, "=")
         )
 
         for dns_record in dns_record_list:
