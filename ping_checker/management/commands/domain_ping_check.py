@@ -16,32 +16,30 @@ class Command(BaseCommand):
         )
 
         for domain_objc in DomainName.objects.filter(is_enable=True):
-            ping = os.system("ping -c 1 -q " + domain_objc.domain_name)
-            popen = os.popen("ping -c 4 -q " + domain_objc.domain_name).read()
+            ping = os.system(f'ping {domain_objc.domain_name} -c 6 -l 1 >> result.txt')
+        result = open('result.txt').read()
+        os.remove('result.txt')
+        try:
+            ip = result.split('\n')[0].split()[2][1:-1]
+            time = result.split('\n')[-3].split()[-1][:-2]
+            packet_lost = result.split('\n')[-3].split()[5][:-1]
+            statistics = result.split('\n')[-3].split()[0: 4]
+            self.stdout.write(f"domain: {domain_objc.domain_name}"
+                  f"ping_code: {ping}, ip: {ip}, time: {time}ms, "
+                  f"packet lost: {packet_lost}%,"
+                  f" statistics: {' '.join(statistics)}")
+        except IndexError:  # Error code: 512
+            self.stdout.write(f"domain: {domain_objc.domain_name}, error: Temporary failure in name resolve")
+            continue
+        except Exception as e:
+            self.stdout.write(f"domain: {domain_objc.domain_name}, error: {e}")
+            continue
 
-            self.stdout.write(f"domain: {domain_objc.domain_name}, code: {ping}, result: {popen}")
-
-            ip = ''
-            time = 0
-            percent = 100
-            try:
-                ip = popen.split('\n')[0]
-                ip = ip[ip.index('(') + 1: ip.index(')')]
-
-                percent = popen.split('\n')[-3].split(',')[2]
-                percent = percent[1: percent.index('%')]
-
-                time = popen.split('\n')[-3].split(',')[3]
-                time = time[6: time.index('ms')]
-            except Exception as e:
-                ping = 777
-                self.stderr.write(f"domain: {domain_objc.domain_name}, error: {e}")
-
-            DomainPingLog.objects.create(
-                ip=ip,
-                domain=domain_objc,
-                latency=time,
-                success_percentage=100 - int(percent),
-                is_ping=(ping == 0),
-                ping_code=ping,
-            )
+        DomainPingLog.objects.create(
+            ip=ip,
+            domain=domain_objc,
+            latency=time,
+            success_percentage=100 - int(packet_lost),
+            is_ping=(ping == 0),
+            ping_code=ping,
+        )

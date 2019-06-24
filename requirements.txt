@@ -1,5 +1,7 @@
 mysqlclient
 requests
 python-memcached
+django_celery_beat
+celery
 
 Django >= 2.2, < 2.3
