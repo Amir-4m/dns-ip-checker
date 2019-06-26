@@ -12,12 +12,13 @@ from .models import DomainNameRecord, ServerIPBank, DomainLogger, DomainZone
 logger = logging.getLogger('domain.dns_updater')
 
 headers = {
-        'X-Auth-Email': settings.CLOUDFLARE_EMAIL,
-        'X-Auth-Key': settings.CLOUDFLARE_API_KEY,
-        'Content-Type': 'application/json',
+    'X-Auth-Email': settings.CLOUDFLARE_EMAIL,
+    'X-Auth-Key': settings.CLOUDFLARE_API_KEY,
+    'Content-Type': 'application/json',
 }
 
 cloudflare_base_url = f"https://api.cloudflare.com/client/v4/zones"
+
 
 @receiver(post_save, sender=DomainNameRecord)
 def create_record(sender, instance, created, **kwargs):
@@ -28,7 +29,7 @@ def create_record(sender, instance, created, **kwargs):
     :param kwargs:
     :return:
     """
-    
+
     data = {
         "type": "A",
         "name": instance.domain_full_name,
@@ -37,7 +38,6 @@ def create_record(sender, instance, created, **kwargs):
         "proxied": True,
     }
 
-    
     if created and instance.is_enable:
         url = f"{cloudflare_base_url}/{instance.domain.zone_id}/dns_records"
         try:
@@ -103,7 +103,6 @@ def create_record(sender, instance, created, **kwargs):
     DomainLogger.objects.create(ip=instance.ip, domain_record=instance, api_response=response_data)
 
 
-
 @receiver(post_save, sender=DomainZone)
 def get_dns_records(sender, instance, created, **kwargs):
     if created:
@@ -118,7 +117,7 @@ def get_dns_records(sender, instance, created, **kwargs):
                 list_of_dns_records.append(
                     DomainNameRecord(
                         domain=instance,
-                        sub_domain_name=dns_record['name'][: dns_record['name'].index('.exmple.com')],
+                        sub_domain_name=dns_record.get('name', '').rstrip(instance.domain),
                         ip=dns_record.get('content', ''),
                         dns_record=dns_record.get('id', ''),
                     )
