@@ -6,6 +6,7 @@ class Server(models.Model):
     updated_time = models.DateTimeField(auto_now=True)
     name = models.CharField(max_length=50)
     description = models.TextField(blank=True)
+    ip = models.CharField(max_length=15, db_index=True)
 
     class Meta:
         db_table = 'dns_servers'
@@ -47,7 +48,10 @@ class DomainNameRecord(models.Model):
     sub_domain_name = models.CharField(max_length=20, unique=True)
     ip = models.CharField(max_length=15)
     dns_record = models.CharField(max_length=32, blank=True, editable=False)
+    server = models.ForeignKey(Server, on_delete=models.PROTECT)
     is_enable = models.BooleanField(default=True)
+    start_time = models.TimeField()
+    end_time = models.TimeField()
 
     class Meta:
         db_table = 'dns_domains_records'
@@ -88,3 +92,31 @@ class DomainLogger(models.Model):
 
     def __str__(self):
         return f"{self.domain_record} {self.ip}"
+
+
+class Network(models.Model):  # this is for domain
+    # FK (irancell or mci) or title
+    ip = models.CharField(max_length=15)
+    log_time = models.DateTimeField()
+    is_filter = models.BooleanField()
+    newtrok_name = models.CharField(max_length=50)
+
+    class Meta:
+        db_table = 'dns_domains_networks'
+
+    def __str__(self):
+        return f"{self.ip} {'FILTER' if self.is_filter else 'NO FILTER'}"
+
+
+class IpInThisNetwork(models.Model):  # this is for ip
+    network = models.ForeignKey(Network, on_delete=models.PROTECT, null=True)
+    server = models.ForeignKey(ServerIPBank, on_delete=models.PROTECT, null=True)
+    log_time = models.DateTimeField()
+    is_filter = models.BooleanField()
+    network_name = models.CharField(max_length=50)
+
+    class Meta:
+        db_table = 'dns_domains_check_ip_in_network'
+
+    def __str__(self):
+        return f"{self.server.ip} in {self.network} {'is filter' if self.is_filter else 'not filter'}"

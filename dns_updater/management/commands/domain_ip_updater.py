@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 
 from django.utils import timezone
 from django.core.management.base import BaseCommand
@@ -23,15 +24,17 @@ class Command(BaseCommand):
                 continue
 
             self.stdout.write(f"PING FAILED: {dns_record.domain_full_name}:{dns_record.ip}")
+
             ip_object = ServerIPBank.objects.filter(used_time__isnull=True).first()
             if ip_object is None:
                 self.stderr.write(f"NO IP IN BANK")
                 continue
 
-            dns_record.ip = ip_object.ip
-            dns_record.save()
+            if dns_record.start_time <= datetime.now().time() <= dns_record.end_time:
+                dns_record.ip = ip_object.ip
+                dns_record.save()
 
-            ip_object.used_time = timezone.now()
-            ip_object.save()
+                ip_object.used_time = timezone.now()
+                ip_object.save()
 
-            self.stdout.write(f"IP CHANGED: {dns_record.domain_full_name}:{dns_record.ip}")
+                self.stdout.write(f"IP CHANGED: {dns_record.domain_full_name}:{dns_record.ip}")
