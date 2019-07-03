@@ -118,7 +118,7 @@ def get_dns_records(sender, instance, created, **kwargs):
                 list_of_dns_records.append(
                     DomainNameRecord(
                         domain=instance,
-                        sub_domain_name=dns_record.get('name', '').rstrip(instance.domain),
+                        sub_domain_name=dns_record.get('name', '').rstrip(instance.domain_name),
                         ip=dns_record.get('content', ''),
                         dns_record=dns_record.get('id', ''),
                     )
