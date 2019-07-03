@@ -9,10 +9,16 @@ class ServerAdmin(admin.ModelAdmin):
     list_display = ['name', 'created_time', 'description']
 
 
+def make_disable(modeladmin, request, queryset):
+    queryset.update(is_enable=False)
+    make_disable.short_description = "Mark selected IPs as disable"
+
+
 @admin.register(ServerIPBank)
 class ServerIPBankAdmin(admin.ModelAdmin):
     list_display = ['ip', 'used_time', 'server', 'created_time', 'updated_time']
     list_filter = ['server']
+    actions = [make_disable]
 
 
 class ServerIpBankImportExport(ServerIPBank):

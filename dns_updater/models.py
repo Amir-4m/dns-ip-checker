@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.postgres.fields import ArrayField
 
+
 class Server(models.Model):
     created_time = models.DateTimeField(auto_now_add=True)
     updated_time = models.DateTimeField(auto_now=True)
@@ -18,9 +19,11 @@ class Server(models.Model):
 class ServerIPBank(models.Model):
     created_time = models.DateTimeField(auto_now_add=True)
     updated_time = models.DateTimeField(auto_now=True)
+    server = models.ForeignKey(Server, on_delete=models.PROTECT)
     used_time = models.DateTimeField(null=True, editable=False)
     ip = models.CharField(max_length=15, unique=True)
-    server = models.ForeignKey(Server, on_delete=models.PROTECT)
+    expire_time = models.DateTimeField(null=True)
+    is_enable = models.BooleanField()
 
     class Meta:
         db_table = 'dns_servers_ip'
