@@ -115,8 +115,8 @@ class Network(models.Model):
 
 
 class PingIpInThisNetwork(models.Model):
-    network = models.ManyToManyField(Network, on_delete=models.PROTECT)
-    server = models.ManyToManyField(Server, on_delete=models.PROTECT)
+    network = models.ManyToManyField(Network)
+    server = models.ManyToManyField(Server)
     ip = models.ForeignKey(ServerIPBank, on_delete=models.PROTECT)
     log_time = models.DateTimeField()
     is_filter = models.BooleanField()
@@ -131,8 +131,8 @@ class PingIpInThisNetwork(models.Model):
 
 
 class PingDomainInThisNetwork(models.Model):
-    network = models.ManyToManyField(Network, on_delete=models.PROTECT)
-    server = models.ManyToManyField(Server, on_delete=models.PROTECT)
+    network = models.ManyToManyField(Network)
+    server = models.ManyToManyField(Server)
     domain = models.ForeignKey(DomainNameRecord, on_delete=models.PROTECT)
     log_time = models.DateTimeField()
     is_filter = models.BooleanField()

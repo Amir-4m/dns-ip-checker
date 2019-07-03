@@ -106,6 +106,7 @@ def create_record(sender, instance, created, **kwargs):
 @receiver(post_save, sender=DomainZone)
 def get_dns_records(sender, instance, created, **kwargs):
     if created:
+        print('hi')
         url = f"{cloudflare_base_url}/{instance.zone_id}/dns_records"
         try:
             r = requests.get(url, headers=headers)
