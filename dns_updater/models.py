@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.postgres.fields import ArrayField
+from django.utils.translation import ugettext_lazy as _
 
 
 class Server(models.Model):
@@ -7,7 +7,7 @@ class Server(models.Model):
     updated_time = models.DateTimeField(auto_now=True)
     name = models.CharField(max_length=50)
     description = models.TextField(blank=True)
-    ip = models.CharField(max_length=15, db_index=True)
+    ip = models.CharField(max_length=15)
 
     class Meta:
         db_table = 'dns_servers'
@@ -23,7 +23,7 @@ class ServerIPBank(models.Model):
     used_time = models.DateTimeField(null=True, editable=False)
     ip = models.CharField(max_length=15, unique=True)
     expire_time = models.DateTimeField(null=True)
-    is_enable = models.BooleanField()
+    is_enable = models.BooleanField(default=True)
 
     class Meta:
         db_table = 'dns_servers_ip'
@@ -47,14 +47,15 @@ class DomainZone(models.Model):
 class DomainNameRecord(models.Model):
     created_time = models.DateTimeField(auto_now_add=True)
     updated_time = models.DateTimeField(auto_now=True)
+    network = models.ManyToManyField('Network')
     domain = models.ForeignKey(DomainZone, on_delete=models.PROTECT)
     sub_domain_name = models.CharField(max_length=20)
     ip = models.CharField(max_length=15)
     dns_record = models.CharField(max_length=32, blank=True, editable=False)
-    server = models.ForeignKey(Server, on_delete=models.PROTECT)
+    server = models.ForeignKey(Server, on_delete=models.PROTECT, null=True, blank=True)
     is_enable = models.BooleanField(default=True)
-    start_time = models.TimeField()
-    end_time = models.TimeField()
+    start_time = models.TimeField(null=True, blank=True)
+    end_time = models.TimeField(null=True, blank=True)
 
     class Meta:
         db_table = 'dns_domains_records'
@@ -101,12 +102,12 @@ class DomainLogger(models.Model):
 class Network(models.Model):
     N1, N2, N3 = 'mtn', 'mci', 'rtl'
     NETWORK_CHOICES = (
-        (N1, 'MTN Irancell'),
-        (N2, 'MCI'),
-        (N3, 'RighTel'),
+        (N1, _('MTN Irancell')),
+        (N2, _('MCI')),
+        (N3, _('RighTel')),
     )
     isp = models.CharField(choices=NETWORK_CHOICES, max_length=3)
-    title = ArrayField(models.CharField(max_length=30))
+    regex = models.CharField(max_length=30)
 
     class Meta:
         db_table = 'dns_domains_networks'
@@ -115,11 +116,11 @@ class Network(models.Model):
         return f"{self.isp}"
 
 
-class PingIpInThisNetwork(models.Model):
-    network = models.ManyToManyField(Network)
-    server = models.ManyToManyField(Server)
-    ip = models.ForeignKey(ServerIPBank, on_delete=models.PROTECT)
-    log_time = models.DateTimeField()
+class PingLog(models.Model):
+    created_time = models.DateTimeField(auto_now_add=True)
+    network = models.ForeignKey(Network, on_delete=models.PROTECT, null=True, blank=True)
+    ip = models.ForeignKey(ServerIPBank, on_delete=models.PROTECT, db_index=True, null=True, blank=True)
+    domain = models.ForeignKey(DomainNameRecord, on_delete=models.PROTECT, db_index=True, null=True, blank=True)
     is_filter = models.BooleanField()
     network_name = models.CharField(max_length=50)
 
@@ -127,38 +128,20 @@ class PingIpInThisNetwork(models.Model):
         db_table = 'dns_domains_check_ip_in_network'
 
     def __str__(self):
-        return f"{self.server.ip} {self.server.name} " \
+        return f"{self.ip if self.ip != '' and self.ip is not None else self.domain} " \
             f"NETWORK: {self.network} {'FILTER' if self.is_filter else 'NOT FILTER'}"
 
-
-class PingDomainInThisNetwork(models.Model):
-    network = models.ManyToManyField(Network)
-    server = models.ManyToManyField(Server)
-    domain = models.ForeignKey(DomainNameRecord, on_delete=models.PROTECT)
-    log_time = models.DateTimeField()
-    is_filter = models.BooleanField()
-    network_name = models.CharField(max_length=50)
-
-    class Meta:
-        db_table = 'dns_domains_check_domain_in_network'
-
-    def __str__(self):
-        return f"{self.domain.domain_full_name} {self.server.name} " \
-            f"NETWORK: {self.network.title} {'FILTER' if self.is_filter else 'NOT FILTER'}"
-
-
-class PingLogDomain(models.Model):
-    created_time = models.DateTimeField(auto_now_add=True)
-    domain = models.ForeignKey(DomainNameRecord, on_delete=models.PROTECT)
-    network = models.ForeignKey(Network, on_delete=models.PROTECT)
-    ip = models.CharField(max_length=15, null=True)
-    latency = models.FloatField()
-    success_percentage = models.PositiveIntegerField()
-    was_pinged = models.BooleanField()
-    ping_code = models.IntegerField()
-
-    class Meta:
-        db_table = 'dns_domains_ping_domains'
-
-    def __str__(self):
-        return f"{self.domain} {'PINGED' if self.was_pinged else 'NOT PINGED'} IP:{self.ip} SUCCESS:%{self.success_percentage}"
+# class PingDomainInThisNetwork(models.Model):
+#     network = models.ManyToManyField(Network)
+#     server = models.ManyToManyField(Server)
+#     domain = models.ForeignKey(DomainNameRecord, on_delete=models.PROTECT)
+#     log_time = models.DateTimeField()
+#     is_filter = models.BooleanField()
+#     network_name = models.CharField(max_length=50)
+#
+#     class Meta:
+#         db_table = 'dns_domains_check_domain_in_network'
+#
+#     def __str__(self):
+#         return f"{self.domain.domain_full_name} {self.server.name} " \
+#             f"NETWORK: {self.network.title} {'FILTER' if self.is_filter else 'NOT FILTER'}"
