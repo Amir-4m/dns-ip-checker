@@ -19,6 +19,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Application definition
 INSTALLED_APPS = [
+    'import_export',
     'dns_updater',
     'ping_checker',
     'django_celery_beat',
@@ -139,3 +140,5 @@ LOGGING = ({
         },
     }
 })
+
+IMPORT_EXPORT_USE_TRANSACTIONS = True

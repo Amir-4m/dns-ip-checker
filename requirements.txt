@@ -3,5 +3,6 @@ requests
 python-memcached
 django_celery_beat
 celery
+django-import-export
 
 Django >= 2.2, < 2.3

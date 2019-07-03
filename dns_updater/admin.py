@@ -1,4 +1,5 @@
 from django.contrib import admin
+from import_export.admin import ImportExportModelAdmin
 
 from .models import Server, ServerIPBank, DomainZone, DomainNameRecord, DomainLogger
 
@@ -12,6 +13,16 @@ class ServerAdmin(admin.ModelAdmin):
 class ServerIPBankAdmin(admin.ModelAdmin):
     list_display = ['ip', 'used_time', 'server', 'created_time', 'updated_time']
     list_filter = ['server']
+
+
+class ServerIpBankImportExport(ServerIPBank):
+    class Meta:
+        proxy = True
+
+
+@admin.register(ServerIpBankImportExport)
+class ImportExport(ImportExportModelAdmin):
+    pass
 
 
 @admin.register(DomainZone)
