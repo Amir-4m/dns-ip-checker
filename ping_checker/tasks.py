@@ -14,11 +14,9 @@ def domain_list_ping_check():
         try:
             domain_ping_check(domain_obj)
         except IndexError:  # Error code: 512
-            print(f"domain: {domain_obj.domain_name}, error: Temporary failure in name resolve")
-            continue
+            logger.warning(f"domain: {domain_obj.domain_name}, error: Temporary failure in name resolve")
         except Exception as e:
-            print(f"domain: {domain_obj.domain_name}, error: {e}")
-            continue
+            logger.error(f"domain: {domain_obj.domain_name}, error: {e}")
 
 
 @shared_task
@@ -26,8 +24,8 @@ def domain_ping_check(domain_obj):
     if not isinstance(domain_obj, DomainName):
         try:
             domain_obj = DomainName.objects.get(pk=domain_obj)
-        except Exception as e:
-            pass
+        except DomainName.DoesNotExist:
+            logger.error('Domain pk {} not found'.format(str(domain_obj)))
 
     ping = os.system(f'ping {domain_obj.domain_name} -c 6 -l 1 > result.tmp')
     result = open('result.tmp').read()
@@ -36,10 +34,10 @@ def domain_ping_check(domain_obj):
     time = result.split('\n')[-3].split()[-1][:-2]
     packet_lost = result.split('\n')[-3].split()[5][:-1]
     statistics = result.split('\n')[-3].split()[0: 4]
-    print(f"domain: {domain_obj.domain_name} "
-          f"ping_code: {ping}, ip: {ip}, time: {time}ms, "
-          f"packet lost: {packet_lost}%, "
-          f"statistics: {' '.join(statistics)}")
+    logger.info(f"domain: {domain_obj.domain_name} "
+                f"ping_code: {ping}, ip: {ip}, time: {time}ms, "
+                f"packet lost: {packet_lost}%, "
+                f"statistics: {' '.join(statistics)}")
 
     DomainPingLog.objects.create(
         ip=ip,
