@@ -38,10 +38,10 @@ def create_record(sender, instance, created, **kwargs):
         "proxied": True,
     }
 
-    if created:
-        if not instance.network.exists():
-            for n in InternetServiceProvider.objects.all():
-                instance.network.add(n)
+    # if created:
+    #     if not instance.network.exists():
+    #         for n in InternetServiceProvider.objects.all():
+    #             instance.network.add(n)
 
     if created and instance.is_enable:
         url = f"{cloudflare_base_url}/{instance.domain.zone_id}/dns_records"

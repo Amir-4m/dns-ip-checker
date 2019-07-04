@@ -67,7 +67,7 @@ class DomainNameRecord(models.Model):
     start_time = models.TimeField(null=True, blank=True)
     end_time = models.TimeField(null=True, blank=True)
 
-    network = models.ManyToManyField(InternetServiceProvider)
+    network = models.ManyToManyField(InternetServiceProvider, blank=True)
 
     class Meta:
         db_table = 'dns_domains_records'
