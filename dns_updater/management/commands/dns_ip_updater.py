@@ -1,6 +1,7 @@
 import os
 
 from django.utils import timezone
+from django.db.models import Q
 from django.core.management.base import BaseCommand
 
 from dns_updater.models import DomainNameRecord, ServerIPBank
@@ -35,11 +36,10 @@ class Command(BaseCommand):
                 continue
 
             current_time = timezone.now().time()
-            if dm_record.start_time <= current_time <= dm_record.end_time:
+            if dm_record.start_time <= current_time or current_time <= dm_record.end_time:
                 for dm in DomainNameRecord.objects.filter(
-                        ip=dm_record.ip,
-                        start_time__lte=current_time,
-                        end_time__gte=current_time,
+                    Q(start_time__lte=current_time) | Q(end_time__gte=current_time),
+                    ip=dm_record.ip,
                 ):
                     dm.ip = ip_object.ip
                     dm.save()

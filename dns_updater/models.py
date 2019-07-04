@@ -1,7 +1,5 @@
 from django.db import models
-from django.utils.translation import ugettext_lazy as _# IMPORT_EXPORT_USE_TRANSACTIONS = True
-# IMPORT_EXPORT_SKIP_ADMIN_LOG = True
-
+from django.utils.translation import ugettext_lazy as _
 
 
 class Server(models.Model):

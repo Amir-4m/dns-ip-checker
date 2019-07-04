@@ -17,7 +17,7 @@ headers = {
     'Content-Type': 'application/json',
 }
 
-cloudflare_base_url = f"https://api.cloudflare.com/client/v4/zones"
+cloudflare_base_url = "https://api.cloudflare.com/client/v4/zones"
 
 
 @receiver(post_save, sender=DomainNameRecord)
@@ -111,24 +111,26 @@ def create_record(sender, instance, created, **kwargs):
 @receiver(post_save, sender=DomainZone)
 def get_dns_records(sender, instance, created, **kwargs):
     if created:
-        print('hi')
         url = f"{cloudflare_base_url}/{instance.zone_id}/dns_records"
         try:
-            r = requests.get(url, headers=headers)
+            r = requests.get(url, headers=headers, timeout=(3.05, 27))
             r.raise_for_status()
             response_data = r.json().get('result', {})
 
             list_of_dns_records = []
             for dns_record in response_data:
-                list_of_dns_records.append(
-                    DomainNameRecord(
-                        domain=instance,
-                        sub_domain_name=dns_record.get('name', '').rstrip(instance.domain_name),
-                        ip=dns_record.get('content', ''),
-                        dns_record=dns_record.get('id', ''),
+                if dns_record.get('type') == 'A' and dns_record.get('name', '').endswith(instance.domain_name):
+                    list_of_dns_records.append(
+                        DomainNameRecord(
+                            domain=instance,
+                            sub_domain_name=dns_record.get('name', '').rstrip(instance.domain_name),
+                            ip=dns_record.get('content', ''),
+                            dns_record=dns_record.get('id', ''),
+                        )
                     )
-                )
-            DomainNameRecord.objects.bulk_create(list_of_dns_records)
+
+            if list_of_dns_records:
+                DomainNameRecord.objects.bulk_create(list_of_dns_records)
 
         except Exception as e:
             logger.error(f"{instance.domain_name} error: {e}")
