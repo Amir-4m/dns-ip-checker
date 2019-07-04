@@ -22,18 +22,18 @@ def make_enable(modeladmin, request, queryset):
 make_enable.short_description = _("Mark selected as enable")
 
 
-class ViewedTimeFilter(SimpleListFilter):
-    title = 'View Time'
-    parameter_name = 'is_null'
+class IsUsedFilter(SimpleListFilter):
+    title = 'Is Used'
+    parameter_name = 'is_used'
 
     def lookups(self, request, model_admin):
-        return [("1", 'clicked'), ("2", 'not click')]
+        return [("1", 'used'), ("2", 'free')]
 
     def queryset(self, request, queryset):
         if self.value() == "1":
-            return queryset.filter(view_time__isnull=False)
+            return queryset.filter(used_time__isnull=False)
         elif self.value() == "2":
-            return queryset.filter(view_time__isnull=True)
+            return queryset.filter(used_time__isnull=True)
 
 
 class ImportExportServerIP(resources.ModelResource):
@@ -54,7 +54,7 @@ class ServerAdmin(admin.ModelAdmin):
 @admin.register(ServerIPBank)
 class ServerIPBankAdmin(ImportExportModelAdmin, admin.ModelAdmin):
     list_display = ['ip', 'used_time', 'server', 'created_time', 'updated_time', 'is_enable']
-    list_filter = ['is_enable', 'server']
+    list_filter = ['is_enable', 'server', IsUsedFilter]
     actions = [make_disable, make_enable]
     resource_class = ImportExportServerIP
 
