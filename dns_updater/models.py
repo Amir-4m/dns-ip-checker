@@ -1,5 +1,7 @@
 from django.db import models
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import ugettext_lazy as _# IMPORT_EXPORT_USE_TRANSACTIONS = True
+# IMPORT_EXPORT_SKIP_ADMIN_LOG = True
+
 
 
 class Server(models.Model):
@@ -19,10 +21,10 @@ class Server(models.Model):
 class ServerIPBank(models.Model):
     created_time = models.DateTimeField(auto_now_add=True)
     updated_time = models.DateTimeField(auto_now=True)
-    server = models.ForeignKey(Server, on_delete=models.PROTECT)
-    used_time = models.DateTimeField(null=True, editable=False)
     ip = models.CharField(max_length=15, unique=True)
-    expire_time = models.DateTimeField(null=True)
+    server = models.ForeignKey(Server, on_delete=models.CASCADE)
+    used_time = models.DateTimeField(null=True, editable=False)
+    expire_time = models.DateTimeField(null=True, blank=True)
     is_enable = models.BooleanField(default=True)
 
     class Meta:

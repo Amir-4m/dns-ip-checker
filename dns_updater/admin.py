@@ -1,5 +1,7 @@
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
+from django.contrib.admin import SimpleListFilter
+
 from import_export.admin import ImportExportModelAdmin
 from import_export import resources
 
@@ -20,16 +22,32 @@ def make_enable(modeladmin, request, queryset):
 make_enable.short_description = _("Mark selected as enable")
 
 
+class ViewedTimeFilter(SimpleListFilter):
+    title = 'View Time'
+    parameter_name = 'is_null'
+
+    def lookups(self, request, model_admin):
+        return [("1", 'clicked'), ("2", 'not click')]
+
+    def queryset(self, request, queryset):
+        if self.value() == "1":
+            return queryset.filter(view_time__isnull=False)
+        elif self.value() == "2":
+            return queryset.filter(view_time__isnull=True)
+
+
 class ImportExportServerIP(resources.ModelResource):
     class Meta:
         model = ServerIPBank
-        exclude = ('id', 'created_time', 'updated_time', 'used_time', 'expire_time', 'is_enable')
-        import_id_fields = ['server']
+        exclude = ('id', )
+        import_id_fields = ('server', 'ip')
+        export_order = ('ip', 'server', 'used_time', 'is_enable', 'created_time')
+        skip_unchanged = True
 
 
 @admin.register(Server)
 class ServerAdmin(admin.ModelAdmin):
-    list_display = ['name', 'ip', 'created_time', 'description']
+    list_display = ['name', 'ip', 'id', 'created_time', 'description']
     search_fields = ['name', 'ip']
 
 
