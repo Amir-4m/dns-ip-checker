@@ -30,6 +30,7 @@ class ImportExportServerIP(resources.ModelResource):
 @admin.register(Server)
 class ServerAdmin(admin.ModelAdmin):
     list_display = ['name', 'ip', 'created_time', 'description']
+    search_fields = ['name', 'ip']
 
 
 @admin.register(ServerIPBank)
