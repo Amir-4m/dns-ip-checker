@@ -33,7 +33,7 @@ class ServerIPBank(models.Model):
 
 
 class DomainZone(models.Model):
-    domain_name = models.CharField(max_length=50)
+    domain_name = models.CharField(max_length=50, unique=True)
     zone_id = models.CharField(max_length=32)
 
     class Meta:
@@ -48,7 +48,7 @@ class DomainNameRecord(models.Model):
     created_time = models.DateTimeField(auto_now_add=True)
     updated_time = models.DateTimeField(auto_now=True)
     domain = models.ForeignKey(DomainZone, on_delete=models.PROTECT)
-    sub_domain_name = models.CharField(max_length=20, unique=True)
+    sub_domain_name = models.CharField(max_length=20)
     ip = models.CharField(max_length=15)
     dns_record = models.CharField(max_length=32, blank=True, editable=False)
     server = models.ForeignKey(Server, on_delete=models.PROTECT)
@@ -59,6 +59,7 @@ class DomainNameRecord(models.Model):
     class Meta:
         db_table = 'dns_domains_records'
         verbose_name = 'Domain Record'
+        unique_together = ('sub_domain_name', 'domain')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -67,7 +68,7 @@ class DomainNameRecord(models.Model):
         self._b_sub_domain_name = self.sub_domain_name
 
     def __str__(self):
-        return f"{self.sub_domain_name}.{self.domain}"
+        return self.domain_full_name
 
     def is_enable_changed(self):
         return self._b_is_enable != self.is_enable
@@ -80,7 +81,7 @@ class DomainNameRecord(models.Model):
 
     @property
     def domain_full_name(self):
-        return f"{self.sub_domain_name}.{self.domain.domain_name}"
+        return f"{self.sub_domain_name}.{self.domain}"
 
 
 class DomainLogger(models.Model):

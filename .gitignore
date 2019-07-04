@@ -58,6 +58,7 @@ media/*
 static/*
 db.sqlite3
 .idea
+*.tmp
 
 # Flask stuff:
 instance/
