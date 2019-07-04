@@ -1,8 +1,9 @@
+Django >= 2.2, < 2.3
+
 mysqlclient
 requests
 python-memcached
-django_celery_beat
-celery
-django-import-export
 
-Django >= 2.2, < 2.3
+celery == 4.3.0
+django_celery_beat == 1.5.0
+django-import-export == 1.2.0

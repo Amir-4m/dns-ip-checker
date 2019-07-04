@@ -7,7 +7,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.conf import settings
 
-from .models import DomainNameRecord, ServerIPBank, DomainLogger, DomainZone, Network
+from .models import DomainNameRecord, ServerIPBank, DNSUpdateLog, DomainZone, InternetServiceProvider
 
 logger = logging.getLogger('domain.dns_updater')
 
@@ -40,7 +40,7 @@ def create_record(sender, instance, created, **kwargs):
 
     if created:
         if not instance.network.exists():
-            for n in Network.objects.all():
+            for n in InternetServiceProvider.objects.all():
                 instance.network.add(n)
 
     if created and instance.is_enable:
@@ -105,7 +105,7 @@ def create_record(sender, instance, created, **kwargs):
         logger.info(f"NO API CALLED domain:{instance.domain_full_name} ip:{instance.ip}")
         return
 
-    DomainLogger.objects.create(ip=instance.ip, domain_record=instance, api_response=response_data)
+    DNSUpdateLog.objects.create(ip=instance.ip, domain_record=instance, api_response=response_data)
 
 
 @receiver(post_save, sender=DomainZone)
