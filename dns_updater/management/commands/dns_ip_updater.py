@@ -49,4 +49,4 @@ class Command(BaseCommand):
 
                 changed_ip_list.append(ip_object.ip)
 
-                self.stdout.write(f"IP CHANGED: {dm_record.domain_full_name}:{dm_record.ip}")
+                self.stdout.write(f"IP CHANGED: {dm_record.domain_full_name}:{ip_object.ip}")

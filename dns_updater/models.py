@@ -64,8 +64,8 @@ class DomainNameRecord(models.Model):
     dns_record = models.CharField(max_length=32, blank=True, editable=False)
     server = models.ForeignKey(Server, on_delete=models.PROTECT, null=True, blank=True)
     is_enable = models.BooleanField(default=True)
-    start_time = models.TimeField(null=True, blank=True)
-    end_time = models.TimeField(null=True, blank=True)
+    start_time = models.TimeField()
+    end_time = models.TimeField()
 
     network = models.ManyToManyField(InternetServiceProvider, blank=True)
 

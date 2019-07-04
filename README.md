@@ -9,8 +9,6 @@ DEVEL = True
 
 ALLOWED_HOSTS = []
 
-SECRET_KEY = 'SECRET KEY'
-
 DB_ENGINE = 'django.db.backends.mysql'
 DB_HOST = ''
 DB_PORT = ''
