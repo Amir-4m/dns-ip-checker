@@ -1,41 +1,43 @@
 from django.contrib import admin
+from django.utils.translation import ugettext_lazy as _
 from import_export.admin import ImportExportModelAdmin
+from import_export import resources
 
 from .models import Server, ServerIPBank, DomainZone, DomainNameRecord, DomainLogger
-
-
-@admin.register(Server)
-class ServerAdmin(admin.ModelAdmin):
-    list_display = ['name', 'created_time', 'description']
 
 
 def make_disable(modeladmin, request, queryset):
     queryset.update(is_enable=False)
 
 
+make_disable.short_description = _("Mark selected as disable")
+
+
 def make_enable(modeladmin, request, queryset):
     queryset.update(is_enable=True)
 
 
-make_disable.short_description = "Mark selected IPs as disable"
-make_enable.short_description = "Mark selected IPs as enable"
+make_enable.short_description = _("Mark selected as enable")
+
+
+class ImportExportServerIP(resources.ModelResource):
+    class Meta:
+        model = ServerIPBank
+        exclude = ('id', 'created_time', 'updated_time', 'used_time', 'expire_time', 'is_enable')
+        import_id_fields = ['server']
+
+
+@admin.register(Server)
+class ServerAdmin(admin.ModelAdmin):
+    list_display = ['id', 'name', 'created_time', 'description']
 
 
 @admin.register(ServerIPBank)
-class ServerIPBankAdmin(admin.ModelAdmin):
+class ServerIPBankAdmin(ImportExportModelAdmin, admin.ModelAdmin):
     list_display = ['ip', 'used_time', 'server', 'created_time', 'updated_time', 'is_enable']
     list_filter = ['server']
     actions = [make_disable, make_enable]
-
-
-class ServerIpBankImportExport(ServerIPBank):
-    class Meta:
-        proxy = True
-
-
-@admin.register(ServerIpBankImportExport)
-class ImportExport(ImportExportModelAdmin):
-    pass
+    resource_class = ImportExportServerIP
 
 
 @admin.register(DomainZone)

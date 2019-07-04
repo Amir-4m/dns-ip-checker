@@ -7,7 +7,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.conf import settings
 
-from .models import DomainNameRecord, ServerIPBank, DomainLogger, DomainZone
+from .models import DomainNameRecord, ServerIPBank, DomainLogger, DomainZone, Network
 
 logger = logging.getLogger('domain.dns_updater')
 
@@ -37,6 +37,11 @@ def create_record(sender, instance, created, **kwargs):
         "ttl": 1,
         "proxied": True,
     }
+
+    if created:
+        if not instance.network.exists():
+            for n in Network.objects.all():
+                instance.network.add(n)
 
     if created and instance.is_enable:
         url = f"{cloudflare_base_url}/{instance.domain.zone_id}/dns_records"
