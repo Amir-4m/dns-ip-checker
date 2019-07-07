@@ -5,7 +5,7 @@ from django.contrib.admin import SimpleListFilter
 from import_export.admin import ImportExportModelAdmin
 from import_export import resources
 
-from .models import Server, ServerIPBank, DomainZone, DomainNameRecord, DNSUpdateLog
+from .models import Server, ServerIPBank, DomainZone, DomainNameRecord, DNSUpdateLog, InternetServiceProvider
 
 
 def make_disable(modeladmin, request, queryset):
@@ -39,7 +39,7 @@ class IsUsedFilter(SimpleListFilter):
 class ImportExportServerIP(resources.ModelResource):
     class Meta:
         model = ServerIPBank
-        exclude = ('id', )
+        exclude = ('id',)
         import_id_fields = ('server', 'ip')
         export_order = ('ip', 'server', 'used_time', 'is_enable', 'created_time')
         skip_unchanged = True
@@ -66,7 +66,7 @@ class DomainZoneAdmin(admin.ModelAdmin):
 
 @admin.register(DomainNameRecord)
 class DomainNameRecordAdmin(admin.ModelAdmin):
-    list_display = ['sub_domain_name', 'domain', 'ip', 'is_enable', 'updated_time', 'created_time']
+    list_display = ['sub_domain_name', 'domain', 'ip', 'networks', 'is_enable', 'updated_time', 'created_time']
     list_editable = ['ip', 'is_enable']
     list_filter = ['is_enable', 'domain', 'updated_time', 'server']
     search_fields = ['ip', 'sub_domain_name', 'dns_record', 'domain__domain_name', 'domain__zone_id']
@@ -92,3 +92,8 @@ class DomainLoggerAdmin(admin.ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return False
+
+
+@admin.register(InternetServiceProvider)
+class InternetServiceProviderAdmin(admin.ModelAdmin):
+    list_display = ['isp_name', 'slug']
