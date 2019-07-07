@@ -1,16 +1,26 @@
-import os
-
 from django.utils import timezone
 from django.core.management.base import BaseCommand
 
-from dns_updater.models import DomainNameRecord, ServerIPBank
+from dns_updater.models import DomainNameRecord, ServerIPBank, InternetServiceProvider
+from ping_logs.models import PingLog
+from utils.ping import PingCheck
 
 
 class Command(BaseCommand):
     help = 'check domain ip and update if ping != 0'
 
-    def handle(self, *args, **options):
-        dm_record_list = DomainNameRecord.objects.filter(is_enable=True).exclude(dns_record='')
+    def add_arguments(self, parser):
+        parser.add_argument('isp', type=str, help='InternetServiceProvider slug field')
+
+    def handle(self, *args, **kwargs):
+        isp_name = kwargs['isp']
+        try:
+            isp = InternetServiceProvider.objects.get(slug=isp_name)
+        except Exception as e:
+            print(e, 'Please enter valid ISP name')
+            return
+
+        dm_record_list = DomainNameRecord.objects.filter(is_enable=True, network__in=[isp]).exclude(dns_record='')
         changed_ip_list = []
 
         self.stdout.write(
@@ -19,12 +29,28 @@ class Command(BaseCommand):
 
         for dm_record in dm_record_list:
             dm_record.refresh_from_db()
+            # ping = os.system('ping -c 6 -s 1 -q' + dm_record.ip)
+            # PingLog Create
+            # PingLog.objects.create(
+            #     network_name='',
+            #     domain=dm_record.domain_full_name,
+            #     ip=dm_record.ip,
+            #     is_ping=(ping == 0)
+            # )
+            ping = PingCheck(dm_record.ip)
+            PingLog.objects.create(
+                network_name=isp.isp_name,
+                network=isp,
+                domain=dm_record.domain_full_name,
+                ip=ping.ip,
+                is_ping=(ping.status == 0)
+            )
+
             if dm_record.ip in changed_ip_list:
                 self.stdout.write(f"ALREADY CHANGED - {dm_record.domain_full_name}:{dm_record.ip}")
                 continue
 
-            ping = os.system('ping -c 4 -q ' + dm_record.ip)
-            if ping == 0:
+            if ping.status == 0:
                 self.stdout.write(f"PING OK - {dm_record.domain_full_name}:{dm_record.ip}")
                 continue
 

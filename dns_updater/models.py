@@ -34,13 +34,14 @@ class ServerIPBank(models.Model):
 
 class InternetServiceProvider(models.Model):
     isp_name = models.CharField(max_length=50)
+    slug = models.SlugField(unique=True)
     net_detect_pattern = models.CharField(max_length=100)
 
     class Meta:
         db_table = 'dns_isp'
 
     def __str__(self):
-        return {self.isp_name}
+        return self.isp_name
 
 
 class DomainZone(models.Model):
@@ -64,8 +65,8 @@ class DomainNameRecord(models.Model):
     dns_record = models.CharField(max_length=32, blank=True, editable=False)
     server = models.ForeignKey(Server, on_delete=models.PROTECT, null=True, blank=True)
     is_enable = models.BooleanField(default=True)
-    start_time = models.TimeField()
-    end_time = models.TimeField()
+    start_time = models.TimeField(null=True)
+    end_time = models.TimeField(null=True)
 
     network = models.ManyToManyField(InternetServiceProvider, blank=True)
 
@@ -96,6 +97,10 @@ class DomainNameRecord(models.Model):
     def domain_full_name(self):
         return f"{self.sub_domain_name}.{self.domain}"
 
+    @property
+    def networks(self):
+        return ",".join([n.isp_name for n in self.network.all()])
+
 
 class DNSUpdateLog(models.Model):
     created_time = models.DateTimeField(auto_now_add=True)
@@ -109,18 +114,3 @@ class DNSUpdateLog(models.Model):
 
     def __str__(self):
         return f"{self.domain_record} - {self.ip}"
-
-
-# class PingLog(models.Model):
-#     created_time = models.DateTimeField(auto_now_add=True)
-#     network = models.ForeignKey(InternetServiceProvider, on_delete=models.PROTECT, null=True, blank=True)
-#     ip = models.ForeignKey(ServerIPBank, on_delete=models.PROTECT, db_index=True, null=True, blank=True)
-#     domain = models.ForeignKey(DomainNameRecord, on_delete=models.PROTECT, db_index=True, null=True, blank=True)
-#     is_filter = models.BooleanField()
-#     network_name = models.CharField(max_length=50)
-#
-#     class Meta:
-#         db_table = 'dns_ping_log'
-#
-#     def __str__(self):
-#         return f"{self.network or self.network_name} - {self.domain or self.ip} - {self.created_time}"

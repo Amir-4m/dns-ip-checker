@@ -1,7 +1,7 @@
 from django.utils import timezone
 from django.core.management.base import BaseCommand
 
-from ping_checker.tasks import domain_list_ping_check
+from domain_check.tasks import domain_list_ping_check
 
 
 class Command(BaseCommand):

@@ -23,7 +23,8 @@ SECRET_KEY = '2-8n!d^qmck+c+o$+4&=_=o8p1gimu6c3j-ircfap008w*scsz'
 # Application definition
 INSTALLED_APPS = [
     'dns_updater',
-    'ping_checker',
+    'domain_check',
+    'ping_logs',
 
     'import_export',
     'django_celery_beat',
@@ -135,7 +136,7 @@ LOGGING = ({
         },
     },
     'loggers': {
-        'domain.ping_checker': {
+        'domain.domain_check': {
             'level': 'DEBUG',
             'handlers': ['console', 'file']
         },
