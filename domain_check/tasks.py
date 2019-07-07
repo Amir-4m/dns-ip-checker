@@ -2,7 +2,8 @@ import os
 import logging
 
 from celery import shared_task
-from .models import DomainName, DomainPingLog
+from .models import DomainName
+from ping_logs.models import PingLog
 
 
 logger = logging.getLogger('dns_updater')
@@ -27,7 +28,7 @@ def domain_ping_check(domain_obj):
         except DomainName.DoesNotExist:
             logger.error('Domain pk {} not found'.format(str(domain_obj)))
 
-    ping = os.system(f'ping {domain_obj.domain_name} -c 6 -l 1 > result.tmp')
+    ping = os.system(f'ping {domain_obj.domain_name} -c 6 -s 1 > result.tmp')
     result = open('result.tmp').read()
 
     ip = result.split('\n')[0].split()[2][1:-1]
@@ -39,11 +40,9 @@ def domain_ping_check(domain_obj):
                 f"packet lost: {packet_lost}%, "
                 f"statistics: {' '.join(statistics)}")
 
-    DomainPingLog.objects.create(
+    PingLog.objects.create(
+        network_name='',
+        domain=domain_obj.domain_name,
         ip=ip,
-        domain=domain_obj,
-        latency=time,
-        success_percentage=100 - float(packet_lost),
-        is_ping=(ping == 0),
-        ping_code=ping,
+        is_ping=(ping == 0)
     )
