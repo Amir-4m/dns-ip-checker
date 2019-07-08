@@ -35,7 +35,7 @@ class Migration(migrations.Migration):
                 ('success_percentage', models.IntegerField()),
                 ('is_ping', models.BooleanField(verbose_name='was pinged?')),
                 ('ping_code', models.TextField(verbose_name='ping result')),
-                ('domain', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='ping_checker.DomainName')),
+                ('domain', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='domain_check.DomainName')),
             ],
             options={
                 'db_table': 'ping_checker_domain_log',
