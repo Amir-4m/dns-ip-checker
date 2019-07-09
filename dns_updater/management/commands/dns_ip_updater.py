@@ -29,28 +29,21 @@ class Command(BaseCommand):
 
         for dm_record in dm_record_list:
             dm_record.refresh_from_db()
-            # ping = os.system('ping -c 6 -s 1 -q' + dm_record.ip)
-            # PingLog Create
-            # PingLog.objects.create(
-            #     network_name='',
-            #     domain=dm_record.domain_full_name,
-            #     ip=dm_record.ip,
-            #     is_ping=(ping == 0)
-            # )
             ping = PingCheck(dm_record.ip)
             PingLog.objects.create(
+                # TODO: get network name from network whois
                 network_name=isp.isp_name,
                 network=isp,
                 domain=dm_record.domain_full_name,
                 ip=ping.ip,
-                is_ping=(ping.status == 0)
+                is_ping=ping.is_ping
             )
 
             if dm_record.ip in changed_ip_list:
                 self.stdout.write(f"ALREADY CHANGED - {dm_record.domain_full_name}:{dm_record.ip}")
                 continue
 
-            if ping.status == 0:
+            if ping.is_ping:
                 self.stdout.write(f"PING OK - {dm_record.domain_full_name}:{dm_record.ip}")
                 continue
 
