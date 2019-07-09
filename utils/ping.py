@@ -1,53 +1,35 @@
-import subprocess
+import os
 import re
 
 
 class PingCheck:
+    __slots__ = ['input_string', 'is_ping', 'ip', 'time', 'success', 'domain']
+
     def __init__(self, input_string):
         self.input_string = input_string
         self.is_ping = False
         self.ip = None
         self.time = None
-        self.success = None
+        self.success = 0
         self.domain = None
-        self.status = 0
         self.ping()
 
     def ping(self):
         ip_pattern = re.compile(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}")
         is_ip = ip_pattern.match(self.input_string)
+
         if is_ip is None:
             self.domain = self.input_string
         else:
             self.ip = self.input_string
-            self.domain = 'You Entered IP'
-
+            self.domain = ''
         try:
-            p = subprocess.check_output(f'ping -c 6 -s 1 -q {self.input_string}', shell=True)
-            p = p.decode('utf-8')
-            self.ip = p.split('\n')[0].split('(')[1][:-3]
-            self.time = p.split('\n')[-3].split()[-1]
-            self.success = 100 - float(p.split('\n')[-3].split(',')[2].rstrip('% packet loss'))
-
-            if self.success >= 50.0:
-                self.is_ping = True
-
+            ping = os.popen(f'ping -c 6 -q -s 1 {self.input_string}').read()
+            self.ip = ping.split('\n')[0].split()[2][1:-1]
+            self.time = ping.split('\n')[-3].split()[-1].lstrip('time')
+            self.success = 100.0 - float(ping.split('\n')[-3].split(',')[2].rstrip('% packet loss'))
         except Exception as e:
-            self.success = 0
-            self.status = str(e).split()[-1].rstrip('.')
+            print(f"{self.domain if self.domain is not '' else self.ip} {e}")
 
-
-
-
-# def ping_check(input_string):
-#     ping = os.system(f'ping {input_string} -c 6 -s 1 > result.tmp')
-#     result = open('result.tmp').read()
-#
-#     ip = result.split('\n')[0].split()[2][1:-1]
-#     time = result.split('\n')[-3].split()[-1][:-2]
-#     packet_lost = result.split('\n')[-3].split()[5][:-1]
-#     statistics = result.split('\n')[-3].split()[0: 4]
-#     logger.info(f"domain: {input_string} "
-#                 f"ping_code: {ping}, ip: {ip}, time: {time}ms, "
-#                 f"packet lost: {packet_lost}%, "
-#                 f"statistics: {' '.join(statistics)}")
+        if self.success >= 60.0:
+            self.is_ping = True
