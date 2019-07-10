@@ -27,30 +27,23 @@ def create_record(sender, instance, created, **kwargs):
     #             instance.network.add(n)
     #             print(instance.network)
 
-    if instance.server.name.lower() == 'cloudflare':
-        if created and instance.is_enable:
-            cloudflare_create.delay(instance.id, instance.domain_full_name, instance.ip, instance.domain.zone_id)
+    if created and instance.is_enable:
+        cloudflare_create.delay(instance.id, instance.domain_full_name, instance.ip, instance.domain.zone_id)
 
-        elif instance.is_enable_changed() and instance.is_enable:  # False -> True
-            cloudflare_create.delay(instance.id, instance.domain_full_name, instance.ip, instance.domain.zone_id)
+    elif instance.is_enable_changed() and instance.is_enable:  # False -> True
+        cloudflare_create.delay(instance.id, instance.domain_full_name, instance.ip, instance.domain.zone_id)
 
-        elif instance.is_enable_changed() and not instance.is_enable:  # True -> False
-            if not instance.dns_record:
-                logger.warning(f"domain:{instance.domain_full_name} has no dns_record key")
-                return
-            cloudflare_delete.delay(instance.id, instance.domain_full_name, instance.ip, instance.dns_record,
-                                    instance.domain.zone_id)
-
-        elif instance.is_enable and (instance.domain_changed() or instance.ip_changed()):
-            if not instance.dns_record:
-                logger.warning(f"domain:{instance.domain_full_name} has no dns_record key")
-                return
-            cloudflare_edit.delay(instance.id, instance.domain_full_name, instance.ip, instance.dns_record,
-                                  instance.domain.zone_id)
-
-        else:
-            logger.info(f"NO API CALLED domain:{instance.domain_full_name} ip:{instance.ip}")
+    elif instance.is_enable_changed() and not instance.is_enable:  # True -> False
+        if not instance.dns_record:
+            logger.warning(f"domain:{instance.domain_full_name} has no dns_record key")
             return
+        cloudflare_delete.delay(instance.id, instance.domain_full_name, instance.ip, instance.dns_record, instance.domain.zone_id)
+
+    elif instance.is_enable and (instance.domain_changed() or instance.ip_changed()):
+        if not instance.dns_record:
+            logger.warning(f"domain:{instance.domain_full_name} has no dns_record key")
+            return
+        cloudflare_edit.delay(instance.id, instance.domain_full_name, instance.ip, instance.dns_record, instance.domain.zone_id)
 
     else:
         logger.info(f"NO API CALLED domain:{instance.domain_full_name} ip:{instance.ip}")

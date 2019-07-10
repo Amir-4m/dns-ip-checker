@@ -22,7 +22,7 @@ data = {
     "proxied": False,
 }
 
-cloudflare_base_url = f"https://api.cloudflare.com/client/v4/zones"
+cloudflare_base_url = "https://api.cloudflare.com/client/v4/zones"
 
 
 @shared_task
