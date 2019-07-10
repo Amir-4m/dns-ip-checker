@@ -9,18 +9,19 @@ from utils.ping import PingCheck
 class Command(BaseCommand):
     help = 'check domain ip and update if ping != 0'
 
-    def add_arguments(self, parser):
-        parser.add_argument('isp', type=str, help='InternetServiceProvider slug field')
+    # def add_arguments(self, parser):
+    #     parser.add_argument('isp', type=str, help='InternetServiceProvider slug field')
 
     def handle(self, *args, **kwargs):
-        isp_name = kwargs['isp']
-        try:
-            isp = InternetServiceProvider.objects.get(slug=isp_name)
-        except Exception as e:
-            print(e, 'Please enter valid ISP name')
-            return
+        # isp_name = kwargs['isp']
+        # try:
+        #     isp = InternetServiceProvider.objects.get(slug=isp_name)
+        # except Exception as e:
+        #     print(e, 'Please enter valid ISP name')
+        #     return
 
-        dm_record_list = DomainNameRecord.objects.filter(is_enable=True, network__in=[isp]).exclude(dns_record='')
+        # dm_record_list = DomainNameRecord.objects.filter(is_enable=True, network__in=[isp]).exclude(dns_record='')
+        dm_record_list = DomainNameRecord.objects.filter(is_enable=True).exclude(dns_record='')
         changed_ip_list = []
 
         self.stdout.write(
@@ -32,8 +33,9 @@ class Command(BaseCommand):
             ping = PingCheck(dm_record.ip)
             PingLog.objects.create(
                 # TODO: get network name from network whois
-                network_name=isp.isp_name,
-                network=isp,
+                # network_name=isp.isp_name,
+                # network=isp,
+                network_name='',
                 domain=dm_record.domain_full_name,
                 ip=ping.ip,
                 is_ping=ping.is_ping
