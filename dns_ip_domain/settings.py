@@ -80,6 +80,20 @@ DATABASES = {
     }
 }
 
+CACHES = {
+    'default': {
+        'BACKEND': CACHE_BACKEND,
+        'LOCATION': CACHE_HOST,
+        'KEY_PREFIX': 'VAS_PAYMENT'
+    },
+}
+
+CELERY_BROKER_URL = 'amqp://%(USER)s:%(PASS)s@%(HOST)s' % {
+    'USER': CELERY_BROKER_USER,
+    'PASS': CELERY_BROKER_PASS,
+    'HOST': CELERY_BROKER_HOST,
+}
+
 # Password validation
 # https://docs.djangoproject.com/en/1.11/ref/settings/#auth-password-validators
 AUTH_PASSWORD_VALIDATORS = [
