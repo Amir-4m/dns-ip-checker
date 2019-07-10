@@ -1,9 +1,24 @@
+import fcntl
+
 from django.utils import timezone
 from django.core.management.base import BaseCommand
 
 from dns_updater.models import DomainNameRecord, ServerIPBank, InternetServiceProvider
 from ping_logs.models import PingLog
 from utils.ping import PingCheck
+
+
+file_handle = None
+
+
+def file_is_locked(file_path):
+    global file_handle
+    file_handle = open(file_path, 'w')
+    try:
+        fcntl.lockf(file_handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        return False
+    except IOError:
+        return True
 
 
 class Command(BaseCommand):
@@ -13,6 +28,12 @@ class Command(BaseCommand):
     #     parser.add_argument('isp', type=str, help='InternetServiceProvider slug field')
 
     def handle(self, *args, **kwargs):
+        file_path = '/var/lock/dns_ip_updater'
+
+        if file_is_locked(file_path):
+            self.stderr.write(f"[{timezone.now().strftime('%Y-%m-%d %H:%M:%S')}] Skipped Procedure")
+            return
+
         # isp_name = kwargs['isp']
         # try:
         #     isp = InternetServiceProvider.objects.get(slug=isp_name)
