@@ -50,8 +50,11 @@ class Command(BaseCommand):
         )
 
         for dm_record in dm_record_list:
+            self.stdout.write(f"PROCCESSING: {timezone.now().strftime('%Y-%m-%d %H:%M:%S')} {dm_record.domain_full_name}:{dm_record.ip}")
             dm_record.refresh_from_db()
+            self.stdout.write(f"REFRESH: {timezone.now().strftime('%Y-%m-%d %H:%M:%S')} {dm_record.domain_full_name}:{dm_record.ip}")
             ping = PingCheck(dm_record.ip)
+            self.stdout.write(f"PING: {timezone.now().strftime('%Y-%m-%d %H:%M:%S')} {dm_record.domain_full_name}:{dm_record.ip}")
             PingLog.objects.create(
                 # TODO: get network name from network whois
                 # network_name=isp.isp_name,
@@ -61,6 +64,7 @@ class Command(BaseCommand):
                 ip=ping.ip,
                 is_ping=ping.is_ping
             )
+            self.stdout.write(f"CREATE: {timezone.now().strftime('%Y-%m-%d %H:%M:%S')} {dm_record.domain_full_name}:{dm_record.ip}")
 
             if dm_record.ip in changed_ip_list:
                 self.stdout.write(f"ALREADY CHANGED - {dm_record.domain_full_name}:{dm_record.ip}")
