@@ -82,7 +82,7 @@ class Command(BaseCommand):
                 server=dm_record.server
             ).first()
             if ip_object is None:
-                self.stderr.write(f"NO IP IN BANK")
+                self.stderr.write(f"NO IP IN BANK - {dm_record.domain_full_name}, {dm_record.server}")
                 continue
 
             current_time = timezone.now().time()
