@@ -6,7 +6,7 @@ from celery import shared_task
 from django.conf import settings
 from .models import DomainNameRecord, DNSUpdateLog, DomainZone, InternetServiceProvider, ServerIPBank
 
-logger = logging.getLogger('domain.dns_updater')
+logger = logging.getLogger('dns_updater')
 
 headers = {
     'X-Auth-Email': settings.CLOUDFLARE_EMAIL,

@@ -10,16 +10,12 @@ from .models import Server, ServerIPBank, DomainZone, DomainNameRecord, DNSUpdat
 
 def make_disable(modeladmin, request, queryset):
     queryset.update(is_enable=False)
-
-
-make_disable.short_description = _("Mark selected as disable")
+make_disable.short_description = _("Mark selected items as disable")
 
 
 def make_enable(modeladmin, request, queryset):
     queryset.update(is_enable=True)
-
-
-make_enable.short_description = _("Mark selected as enable")
+make_enable.short_description = _("Mark selected items as enable")
 
 
 class IsUsedFilter(SimpleListFilter):
@@ -54,9 +50,13 @@ class ServerAdmin(admin.ModelAdmin):
 @admin.register(ServerIPBank)
 class ServerIPBankAdmin(ImportExportModelAdmin, admin.ModelAdmin):
     list_display = ['ip', 'used_time', 'server', 'created_time', 'updated_time', 'is_enable']
-    list_filter = ['is_enable', 'server', IsUsedFilter]
-    actions = [make_disable, make_enable]
+    list_filter = ['is_enable', IsUsedFilter, 'server']
+    actions = [make_disable, make_enable, 'make_unused']
     resource_class = ImportExportServerIP
+
+    def make_unused(self, request, queryset):
+        queryset.update(used_time=None)
+    make_unused.short_description = _("Mark selected items as unused")
 
 
 @admin.register(DomainZone)

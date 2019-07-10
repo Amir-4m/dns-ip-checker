@@ -7,7 +7,7 @@ from .tasks import cloudflare_create, cloudflare_edit, cloudflare_delete
 
 from .models import DomainNameRecord
 
-logger = logging.getLogger('domain.dns_updater')
+logger = logging.getLogger('dns_updater')
 
 
 @receiver(post_save, sender=DomainNameRecord)

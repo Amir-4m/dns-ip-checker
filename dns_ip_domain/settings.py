@@ -150,11 +150,11 @@ LOGGING = ({
         },
     },
     'loggers': {
-        'domain.domain_check': {
+        'domain_check': {
             'level': 'DEBUG',
             'handlers': ['console', 'file']
         },
-        'domain.dns_updater': {
+        'dns_updater': {
             'level': 'DEBUG',
             'handlers': ['file']
         },

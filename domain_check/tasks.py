@@ -24,8 +24,8 @@ def domain_list_ping_check():
 
 @shared_task
 def domain_ping_check(domain_obj):
-    my_network = requests.get('http://ip-api.com/json/').json().get('isp')
-    network = InternetServiceProvider.objects.get()  # regex check with my_network
+    # my_network = requests.get('http://ip-api.com/json/').json().get('isp')
+    # network = InternetServiceProvider.objects.get()  # regex check with my_network
     if not isinstance(domain_obj, DomainName):
         try:
             domain_obj = DomainName.objects.get(pk=domain_obj)
@@ -43,10 +43,11 @@ def domain_ping_check(domain_obj):
     #             f"ping_code: {ping}, ip: {ip}, time: {time}ms, "
     #             f"packet lost: {packet_lost}%, "
     #             f"statistics: {' '.join(statistics)}")
+
     ping = PingCheck(domain_obj.domain_name)
     PingLog.objects.create(
-        network_name=network.isp_name,
-        network=network,
+        network_name='',
+        # network=network,
         domain=domain_obj.domain_name,
         ip=ping.ip,
         is_ping=(ping.is_ping == 0)
