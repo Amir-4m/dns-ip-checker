@@ -8,7 +8,7 @@ from telethon.tl.functions.messages import GetBotCallbackAnswerRequest
 
 from django.conf import settings
 
-from .models import MTProxy
+from .models import MTProxy, MTProxyStat
 
 api_id = settings.API_ID
 api_hash = settings.API_HASH
@@ -179,8 +179,21 @@ def get_proxies_stat():
             ))
 
             try:
-                stat = client.get_messages('MTProxybot')[0].message.split('\n')[11]
+                stat_text = client.get_messages('MTProxybot')[0].message
+                stat = stat_text.split('\n')[11]
+                stat_number = stat_text.split('\n')[11].split('       ')[1]
+                MTProxyStat.objects.create(
+                    proxy=proxy,
+                    stat_message=stat_text,
+                    number_of_users=stat_number,
+                )
+
                 stat_logger.debug(f"{proxy.host} ---- STAT: {stat}")
             except IndexError:
+                MTProxyStat.objects.create(
+                    proxy=proxy,
+                    stat_message="Sorry, we don't have stats for your proxy yet. Please come back later.",
+                    number_of_users='',
+                )
                 stat_logger.debug(
                     f"{proxy.host} ---- STAT: Sorry, we don't have stats for your proxy yet. Please come back later.")
