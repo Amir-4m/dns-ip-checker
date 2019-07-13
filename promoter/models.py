@@ -1,8 +1,10 @@
 from django.db import models
+from dns_updater.models import Server
 
 
 class MTProxy(models.Model):
     created_time = models.DateTimeField(auto_now_add=True)
+    server = models.ForeignKey(Server, on_delete=models.PROTECT)  # or by check ServerIpBank
     host = models.CharField(max_length=50, db_index=True)
     port = models.IntegerField(db_index=True)
     secret_key = models.CharField(max_length=32)
@@ -18,7 +20,7 @@ class MTProxy(models.Model):
 
 class ChannelPromotePlan(models.Model):  # celery work with this model
     created_time = models.DateTimeField(auto_now_add=True)
-    from_time = models.DateTimeField()
+    from_time = models.DateTimeField()  # format, field name
     until_time = models.DateTimeField()
     proxy = models.ForeignKey(MTProxy, on_delete=models.PROTECT)
     channel = models.CharField(max_length=60)
@@ -33,7 +35,7 @@ class ChannelPromotePlan(models.Model):  # celery work with this model
 class MTProxyStat(models.Model):
     created_time = models.DateTimeField(auto_now_add=True)
     proxy = models.ForeignKey(MTProxy, on_delete=models.PROTECT)
-    stat_message = models.TimeField()
+    stat_message = models.TextField()
     number_of_users = models.PositiveIntegerField()
 
     class Meta:

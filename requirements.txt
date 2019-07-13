@@ -7,3 +7,4 @@ python-memcached
 celery == 4.3.0
 django_celery_beat == 1.5.0
 django-import-export == 1.2.0
+telethon

@@ -27,4 +27,14 @@ STATIC_URL = '/static/'
 
 CLOUDFLARE_EMAIL = 'YOUR EMAIL'
 CLOUDFLARE_API_KEY = 'YOUR API KEY'
+
+
+promoter app 
+
+api_id = ''
+api_hash = ''
+
+proxy_server = ''
+proxy_port = ''
+
 ```

@@ -1,23 +1,13 @@
 import logging
-import json
-
-import requests
 
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from django.conf import settings
 
-from .models import DomainNameRecord, ServerIPBank, DNSUpdateLog, DomainZone, InternetServiceProvider
+from .tasks import cloudflare_create, cloudflare_edit, cloudflare_delete
+
+from .models import DomainNameRecord
 
 logger = logging.getLogger('domain.dns_updater')
-
-headers = {
-    'X-Auth-Email': settings.CLOUDFLARE_EMAIL,
-    'X-Auth-Key': settings.CLOUDFLARE_API_KEY,
-    'Content-Type': 'application/json',
-}
-
-cloudflare_base_url = "https://api.cloudflare.com/client/v4/zones"
 
 
 @receiver(post_save, sender=DomainNameRecord)
@@ -30,112 +20,43 @@ def create_record(sender, instance, created, **kwargs):
     :return:
     """
 
-    data = {
-        "type": "A",
-        "name": instance.domain_full_name,
-        "content": instance.ip,
-        "ttl": 1,
-        "proxied": True,
-    }
-
     # if created:
-    #     if not instance.network.exists():
+    #     if instance.network.exists() is None:
     #         for n in InternetServiceProvider.objects.all():
+    #             print(n)
     #             instance.network.add(n)
+    #             print(instance.network)
 
-    if created and instance.is_enable:
-        url = f"{cloudflare_base_url}/{instance.domain.zone_id}/dns_records"
-        try:
-            r = requests.post(url, headers=headers, json=data)
-            r.raise_for_status()
-            response_data = r.json().get('result', {})
-            DomainNameRecord.objects.filter(id=instance.id).update(dns_record=response_data.get('id', ''))
-        except Exception as e:
-            logger.error(f"CREATE domain:{instance.domain_full_name} ip:{instance.ip} error: {e}")
-            return
+    if instance.server.name.lower() == 'cloudflare':
+        if created and instance.is_enable:
+            cloudflare_create.delay(instance.id, instance.domain_full_name, instance.ip, instance.domain.zone_id)
+
+        elif instance.is_enable_changed() and instance.is_enable:  # False -> True
+            cloudflare_create.delay(instance.id, instance.domain_full_name, instance.ip, instance.domain.zone_id)
+
+        elif instance.is_enable_changed() and not instance.is_enable:  # True -> False
+            if not instance.dns_record:
+                logger.warning(f"domain:{instance.domain_fqull_name} has no dns_record key")
+                return
+            cloudflare_delete.delay(instance.id, instance.domain_full_name, instance.ip, instance.dns_record,
+                                    instance.domain.zone_id)
+
+        elif instance.is_enable and (instance.domain_changed() or instance.ip_changed()):
+            if not instance.dns_record:
+                logger.warning(f"domain:{instance.domain_full_name} has no dns_record key")
+                return
+            cloudflare_edit.delay(instance.id, instance.domain_full_name, instance.ip, instance.dns_record,
+                                  instance.domain.zone_id)
+
         else:
-            logger.info(f"CREATE domain:{instance.domain_full_name} ip:{instance.ip}")
-
-    elif instance.is_enable_changed() and instance.is_enable:  # False -> True
-        url = f"{cloudflare_base_url}/{instance.domain.zone_id}/dns_records"
-        try:
-            r = requests.post(url, headers=headers, json=data)
-            r.raise_for_status()
-            response_data = r.json().get('result', {})
-            DomainNameRecord.objects.filter(id=instance.id).update(dns_record=response_data.get('id', ''))
-        except Exception as e:
-            logger.error(f"CREATE domain:{instance.domain_full_name} ip:{instance.ip} error: {e}")
+            logger.info(f"NO API CALLED domain:{instance.domain_full_name} ip:{instance.ip}")
             return
-        else:
-            logger.info(f"CREATE domain:{instance.domain_full_name} ip:{instance.ip}")
-
-    elif instance.is_enable_changed() and not instance.is_enable:  # True -> False
-        if not instance.dns_record:
-            logger.warning(f"domain:{instance.domain_full_name} has no dns_record key")
-            return
-
-        url = f"{cloudflare_base_url}/{instance.domain.zone_id}/dns_records/{instance.dns_record}"
-        try:
-            r = requests.delete(url, headers=headers)
-            r.raise_for_status()
-            response_data = r.json().get('result', {})
-        except Exception as e:
-            logger.error(f"DELETE domain:{instance.domain_full_name} ip:{instance.ip} error: {e}")
-            return
-        else:
-            logger.info(f"DELETE domain:{instance.domain_full_name} ip:{instance.ip}")
-
-    elif instance.is_enable and (instance.domain_changed() or instance.ip_changed()):
-        if not instance.dns_record:
-            logger.warning(f"domain:{instance.domain_full_name} has no dns_record key")
-            return
-
-        url = f"{cloudflare_base_url}/{instance.domain.zone_id}/dns_records/{instance.dns_record}"
-        try:
-            r = requests.put(url, headers=headers, json=data)
-            r.raise_for_status()
-            response_data = r.json().get('result', {})
-        except Exception as e:
-            logger.error(f"EDIT domain:{instance.domain_full_name} ip:{instance.ip} error: {e}")
-            return
-        else:
-            logger.info(f"EDIT domain:{instance.domain_full_name} ip:{instance.ip}")
 
     else:
         logger.info(f"NO API CALLED domain:{instance.domain_full_name} ip:{instance.ip}")
         return
 
-    DNSUpdateLog.objects.create(ip=instance.ip, domain_record=instance, api_response=response_data)
-
-
-@receiver(post_save, sender=DomainZone)
-def get_dns_records(sender, instance, created, **kwargs):
-    if created:
-        url = f"{cloudflare_base_url}/{instance.zone_id}/dns_records"
-        try:
-            r = requests.get(url, headers=headers, timeout=(3.05, 27))
-            r.raise_for_status()
-            response_data = r.json().get('result', {})
-
-            list_of_dns_records = []
-            for dns_record in response_data:
-                if dns_record.get('type') == 'A' and dns_record.get('name', '').endswith(instance.domain_name):
-                    list_of_dns_records.append(
-                        DomainNameRecord(
-                            domain=instance,
-                            sub_domain_name=dns_record.get('name', '').rstrip(instance.domain_name),
-                            ip=dns_record.get('content', ''),
-                            dns_record=dns_record.get('id', ''),
-                        )
-                    )
-
-            if list_of_dns_records:
-                DomainNameRecord.objects.bulk_create(list_of_dns_records)
-
-        except Exception as e:
-            logger.error(f"{instance.domain_name} error: {e}")
-            return
-        else:
-            logger.info(f"{instance.domain_name} "
-                        f"saved with, {len(list_of_dns_records)} "
-                        f"subdomains: {', '.join(dns.sub_domain_name for dns in list_of_dns_records)}")
+# @receiver(post_save, sender=DomainZone)
+# def get_dns_records(sender, instance, created, **kwargs):
+#     if created:
+#         api_zone.delay(instance.id)
