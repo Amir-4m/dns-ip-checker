@@ -4,7 +4,6 @@ from dns_updater.models import Server
 
 class MTProxy(models.Model):
     created_time = models.DateTimeField(auto_now_add=True)
-    server = models.ForeignKey(Server, on_delete=models.PROTECT)  # or by check ServerIpBank
     host = models.CharField(max_length=50, db_index=True)
     port = models.IntegerField(db_index=True)
     secret_key = models.CharField(max_length=32)

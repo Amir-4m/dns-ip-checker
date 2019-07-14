@@ -31,8 +31,3 @@ class PingCheck:
 
         if self.success >= 60.0:
             self.is_ping = True
-
-    def __str__(self):
-        if self.is_ping:
-            return True
-        return False

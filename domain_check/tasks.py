@@ -6,6 +6,7 @@ from celery import shared_task
 from .models import DomainName
 from ping_logs.models import PingLog
 from utils.ping import PingCheck
+from dns_updater.models import InternetServiceProvider
 
 logger = logging.getLogger('dns_updater')
 
@@ -33,6 +34,7 @@ def domain_ping_check(domain_obj):
     ping = PingCheck(domain_obj.domain_name)
 
     # filter the network
+    netwrok = InternetServiceProvider.objects.get(isp_name=my_network)
 
     PingLog.objects.create(
         network='',
