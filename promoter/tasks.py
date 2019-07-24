@@ -181,7 +181,7 @@ def get_proxies_stat():
             try:
                 stat_text = client.get_messages('MTProxybot')[0].message
                 stat = stat_text.split('\n')[11]
-                stat_number = stat_text.split('\n')[11].split('       ')[1]
+                stat_number = stat.split('       ')[1]
                 MTProxyStat.objects.create(
                     proxy=proxy,
                     stat_message=stat_text,

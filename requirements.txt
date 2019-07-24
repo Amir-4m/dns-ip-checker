@@ -3,6 +3,7 @@ Django >= 2.2, < 2.3
 mysqlclient
 requests
 python-memcached
+Pysocks
 
 celery == 4.3.0
 django_celery_beat == 1.5.0
