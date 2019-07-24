@@ -7,7 +7,7 @@ from django.core.management.base import BaseCommand
 from dns_updater.models import DomainNameRecord, ServerIPBank  # , InternetServiceProvider
 from ping_logs.models import PingLog
 
-from utils.network_tools import NetcatCheck
+from utils.network_tools import NetcatCheck, PingCheck
 
 
 file_handle = None
@@ -45,7 +45,7 @@ class Command(BaseCommand):
 
         # dm_record_list = DomainNameRecord.objects.filter(is_enable=True, network__in=[isp]).exclude(dns_record='')
         dm_record_list = DomainNameRecord.objects.filter(is_enable=True).exclude(dns_record='')
-        changed_ip_list = []
+        checked_ip_list = []
 
         self.stdout.write(
             f" {timezone.now().strftime('%Y-%m-%d %H:%M:%S')} START TO PING DOMAINS ".center(120, "=")
@@ -56,15 +56,11 @@ class Command(BaseCommand):
         for dm_record in dm_record_list:
             self.stdout.write(f"PROCCESSING: {timezone.now().strftime('%Y-%m-%d %H:%M:%S')} {dm_record.domain_full_name}:{dm_record.ip}")
             dm_record.refresh_from_db()
-            self.stdout.write(f"REFRESH: {timezone.now().strftime('%Y-%m-%d %H:%M:%S')} {dm_record.domain_full_name}:{dm_record.ip}")
-
-            if dm_record.ip in changed_ip_list:
-                self.stdout.write(f"ALREADY CHANGED - {dm_record.domain_full_name}:{dm_record.ip}")
+            if dm_record.ip in checked_ip_list:
+                self.stdout.write(f"ALREADY CHECKED - {dm_record.ip}")
                 continue
 
-            netcat = NetcatCheck(dm_record.ip)
-            self.stdout.write(f"PING: {timezone.now().strftime('%Y-%m-%d %H:%M:%S')} {dm_record.domain_full_name}:{dm_record.ip}")
-
+            ping_status = NetcatCheck(dm_record.ip).is_ping or PingCheck(dm_record.ip).is_ping
             PingLog.objects.create(
                 # TODO: get network name from network whois
                 # network_name=isp.isp_name,
@@ -72,11 +68,11 @@ class Command(BaseCommand):
                 network_name='',
                 domain=dm_record.domain_full_name,
                 ip=dm_record.ip,
-                is_ping=netcat.is_ping
+                is_ping=ping_status
             )
-            self.stdout.write(f"CREATE: {timezone.now().strftime('%Y-%m-%d %H:%M:%S')} {dm_record.domain_full_name}:{dm_record.ip}")
+            checked_ip_list.append(dm_record.ip)
 
-            if netcat.is_ping:
+            if ping_status:
                 self.stdout.write(f"PING OK - {dm_record.domain_full_name}:{dm_record.ip}")
                 continue
 
@@ -100,6 +96,6 @@ class Command(BaseCommand):
                 ip_object.used_time = timezone.now()
                 ip_object.save()
 
-                changed_ip_list.append(ip_object.ip)
+                checked_ip_list.append(ip_object.ip)
 
                 self.stdout.write(f"IP CHANGED: {dm_record.domain_full_name}:{ip_object.ip}")

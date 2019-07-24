@@ -4,7 +4,6 @@ import subprocess
 
 
 class PingCheck:
-    __slots__ = ['input_string', 'is_ping', 'ip', 'time', 'success', 'domain']
 
     def __init__(self, input_string):
         self.input_string = input_string
@@ -24,6 +23,7 @@ class PingCheck:
         else:
             self.ip = self.input_string
             self.domain = ''
+
         try:
             ping = os.popen(f'ping -c 6 -q -s 1 {self.input_string}').read()
             self.ip = ping.split('\n')[0].split()[2][1:-1]
@@ -32,8 +32,7 @@ class PingCheck:
         except Exception as e:
             print(f"{self.domain if self.domain is not '' else self.ip} {e}")
 
-        if self.success >= 60.0:
-            self.is_ping = True
+        self.is_ping = self.success >= 60.0
 
 
 class NetcatCheck:
@@ -44,7 +43,7 @@ class NetcatCheck:
         self.nc()
 
     def nc(self):
-        cmd = f"netcat -v -z -w3 {self.ip} 22"
+        cmd = f"netcat -v -z -w5 {self.ip} 22"
         process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         res = str(process.stderr.read())
 
