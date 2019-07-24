@@ -1,11 +1,12 @@
 import fcntl
+import requests
 
 from django.utils import timezone
 from django.core.management.base import BaseCommand
 
 from dns_updater.models import DomainNameRecord, ServerIPBank, InternetServiceProvider
 from ping_logs.models import PingLog
-from utils.ping import PingCheck
+from utils.network_tools import NcCheck
 
 
 file_handle = None
@@ -49,11 +50,13 @@ class Command(BaseCommand):
             f" {timezone.now().strftime('%Y-%m-%d %H:%M:%S')} START TO PING DOMAINS ".center(120, "=")
         )
 
+        # network = requests.get('http://ip-api.com/json/').json()
+
         for dm_record in dm_record_list:
             self.stdout.write(f"PROCCESSING: {timezone.now().strftime('%Y-%m-%d %H:%M:%S')} {dm_record.domain_full_name}:{dm_record.ip}")
             dm_record.refresh_from_db()
             self.stdout.write(f"REFRESH: {timezone.now().strftime('%Y-%m-%d %H:%M:%S')} {dm_record.domain_full_name}:{dm_record.ip}")
-            ping = PingCheck(dm_record.ip)
+            netcat = NcCheck(dm_record.ip)
             self.stdout.write(f"PING: {timezone.now().strftime('%Y-%m-%d %H:%M:%S')} {dm_record.domain_full_name}:{dm_record.ip}")
             PingLog.objects.create(
                 # TODO: get network name from network whois
@@ -61,8 +64,8 @@ class Command(BaseCommand):
                 # network=isp,
                 network_name='',
                 domain=dm_record.domain_full_name,
-                ip=ping.ip,
-                is_ping=ping.is_ping
+                ip=dm_record.ip,
+                is_ping=netcat.is_ping
             )
             self.stdout.write(f"CREATE: {timezone.now().strftime('%Y-%m-%d %H:%M:%S')} {dm_record.domain_full_name}:{dm_record.ip}")
 
@@ -70,7 +73,7 @@ class Command(BaseCommand):
                 self.stdout.write(f"ALREADY CHANGED - {dm_record.domain_full_name}:{dm_record.ip}")
                 continue
 
-            if ping.is_ping:
+            if netcat.is_ping:
                 self.stdout.write(f"PING OK - {dm_record.domain_full_name}:{dm_record.ip}")
                 continue
 

@@ -1,5 +1,6 @@
 import os
 import re
+import subprocess
 
 
 class PingCheck:
@@ -33,3 +34,18 @@ class PingCheck:
 
         if self.success >= 60.0:
             self.is_ping = True
+
+
+class NcCheck:
+    def __init__(self, ip):
+        self.ip = ip
+        self.is_ping = None
+        self.nc()
+
+    def nc(self):
+        cmd = f"netcat -v -z -w3 {self.ip} 22"
+        process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        res = str(process.stderr.read())
+
+        self.is_ping = True if 'succeeded' in res else False
+

@@ -6,7 +6,7 @@ from celery import shared_task
 from .models import DomainName
 from ping_logs.models import PingLog
 from dns_updater.models import InternetServiceProvider
-from utils.ping import PingCheck
+from utils.network_tools import PingCheck
 
 logger = logging.getLogger('dns_updater')
 
