@@ -37,10 +37,10 @@ def cloudflare_create(objc_id, domain, ip, zone_id):
         response_data = r.json().get('result', {})
         DomainNameRecord.objects.filter(id=objc_id).update(dns_record=response_data.get('id', ''))
     except Exception as e:
-        logger.error(f"CREATE domain:{domain} ip:{ip} error: {e}")
+        logger.error(f"CREATE domain: {domain} ip: {ip} error: {e}")
         return
     else:
-        logger.info(f"CREATE domain:{domain} ip:{ip}")
+        logger.info(f"CREATE domain: {domain} ip: {ip}")
 
     DNSUpdateLog.objects.create(
         ip=ip,
@@ -60,10 +60,10 @@ def cloudflare_edit(objc_id, domain, ip, dns_record, zone_id):
         r.raise_for_status()
         response_data = r.json().get('result', {})
     except Exception as e:
-        logger.error(f"EDIT domain:{domain} ip:{ip} error: {e}")
+        logger.error(f"EDIT domain: {domain} ip: {ip} error: {e}")
         return
     else:
-        logger.info(f"EDIT domain:{domain} ip:{ip}")
+        logger.info(f"EDIT domain: {domain} ip: {ip}")
 
     DNSUpdateLog.objects.create(
         ip=ip,
@@ -83,10 +83,10 @@ def cloudflare_delete(objc_id, domain, ip, dns_record, zone_id):
         r.raise_for_status()
         response_data = r.json().get('result', {})
     except Exception as e:
-        logger.error(f"DELETE domain:{domain} ip:{ip} error: {e}")
+        logger.error(f"DELETE domain: {domain} ip: {ip} error: {e}")
         return
     else:
-        logger.info(f"DELETE domain:{domain} ip:{ip}")
+        logger.info(f"DELETE domain: {domain} ip: {ip}")
 
     DNSUpdateLog.objects.create(
         ip=ip,

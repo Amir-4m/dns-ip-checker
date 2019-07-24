@@ -145,7 +145,7 @@ LOGGING = ({
         'file': {
             'level': 'DEBUG' if DEBUG else 'INFO',
             'class': 'logging.FileHandler',
-            'formatter': 'verbose',
+            'formatter': 'verbose' if DEBUG else 'simple',
             'filename': os.path.join(LOG_DIR, 'django.log'),
         },
     },

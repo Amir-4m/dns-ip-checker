@@ -1,12 +1,13 @@
 import fcntl
-import requests
+# import requests
 
 from django.utils import timezone
 from django.core.management.base import BaseCommand
 
-from dns_updater.models import DomainNameRecord, ServerIPBank, InternetServiceProvider
+from dns_updater.models import DomainNameRecord, ServerIPBank  # , InternetServiceProvider
 from ping_logs.models import PingLog
-from utils.network_tools import NcCheck
+
+from utils.network_tools import NetcatCheck
 
 
 file_handle = None
@@ -56,8 +57,14 @@ class Command(BaseCommand):
             self.stdout.write(f"PROCCESSING: {timezone.now().strftime('%Y-%m-%d %H:%M:%S')} {dm_record.domain_full_name}:{dm_record.ip}")
             dm_record.refresh_from_db()
             self.stdout.write(f"REFRESH: {timezone.now().strftime('%Y-%m-%d %H:%M:%S')} {dm_record.domain_full_name}:{dm_record.ip}")
-            netcat = NcCheck(dm_record.ip)
+
+            if dm_record.ip in changed_ip_list:
+                self.stdout.write(f"ALREADY CHANGED - {dm_record.domain_full_name}:{dm_record.ip}")
+                continue
+
+            netcat = NetcatCheck(dm_record.ip)
             self.stdout.write(f"PING: {timezone.now().strftime('%Y-%m-%d %H:%M:%S')} {dm_record.domain_full_name}:{dm_record.ip}")
+
             PingLog.objects.create(
                 # TODO: get network name from network whois
                 # network_name=isp.isp_name,
@@ -68,10 +75,6 @@ class Command(BaseCommand):
                 is_ping=netcat.is_ping
             )
             self.stdout.write(f"CREATE: {timezone.now().strftime('%Y-%m-%d %H:%M:%S')} {dm_record.domain_full_name}:{dm_record.ip}")
-
-            if dm_record.ip in changed_ip_list:
-                self.stdout.write(f"ALREADY CHANGED - {dm_record.domain_full_name}:{dm_record.ip}")
-                continue
 
             if netcat.is_ping:
                 self.stdout.write(f"PING OK - {dm_record.domain_full_name}:{dm_record.ip}")

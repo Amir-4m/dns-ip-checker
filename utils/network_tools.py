@@ -36,10 +36,11 @@ class PingCheck:
             self.is_ping = True
 
 
-class NcCheck:
+class NetcatCheck:
+
     def __init__(self, ip):
         self.ip = ip
-        self.is_ping = None
+        self.is_ping = False
         self.nc()
 
     def nc(self):
@@ -47,5 +48,5 @@ class NcCheck:
         process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         res = str(process.stderr.read())
 
-        self.is_ping = True if 'succeeded' in res else False
+        self.is_ping = 'succeeded' in res
 

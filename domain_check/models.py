@@ -8,7 +8,7 @@ class DomainName(models.Model):
     is_enable = models.BooleanField(default=True)
 
     class Meta:
-        db_table = 'ping_checker_domain_list'
+        db_table = 'domain_checker'
 
     def __str__(self):
         return self.domain_name
