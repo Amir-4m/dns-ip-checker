@@ -50,5 +50,5 @@ def domain_ping_check(domain_obj):
         # network=network,
         domain=domain_obj.domain_name,
         ip=ping.ip,
-        is_ping=(ping.is_ping == 0)  # True
+        is_ping=ping.is_ping  # True
     )
