@@ -1,6 +1,6 @@
 Django >= 2.2, < 2.3
 
-telethon
+python-telegram-bot == 11.1.0
 
 mysqlclient
 requests
