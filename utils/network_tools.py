@@ -9,13 +9,6 @@ class PingCheck:
     def __init__(self, input_string):
         self.input_string = input_string
         self.is_ping = False
-        self.ip = None
-        self.time = None
-        self.success = 0
-        self.domain = None
-        self.ping()
-
-    def ping(self):
         ip_pattern = re.compile(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}")
         is_ip = ip_pattern.match(self.input_string)
 
@@ -39,13 +32,9 @@ class PingCheck:
 class NcCheck:
     def __init__(self, ip):
         self.ip = ip
-        self.is_ping = None
-        self.nc()
-
-    def nc(self):
         cmd = f"netcat -v -z -w3 {self.ip} 22"
         process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         res = str(process.stderr.read())
 
-        self.is_ping = True if 'succeeded' in res else False
+        self.is_ping = 'succeeded' in res
 
