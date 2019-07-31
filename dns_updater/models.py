@@ -8,9 +8,11 @@ class Server(models.Model):
     name = models.CharField(max_length=50)
     description = models.TextField(blank=True)
     ip = models.CharField(max_length=15)
+    port = models.PositiveSmallIntegerField(default=22)
 
     class Meta:
         db_table = 'dns_servers'
+        verbose_name = 'Server'
 
     def __str__(self):
         return self.name
@@ -27,6 +29,7 @@ class ServerIPBank(models.Model):
 
     class Meta:
         db_table = 'dns_servers_ip'
+        verbose_name = 'Server IP Bank'
 
     def __str__(self):
         return self.ip
@@ -39,6 +42,7 @@ class InternetServiceProvider(models.Model):
 
     class Meta:
         db_table = 'dns_isp'
+        verbose_name = 'ISP'
 
     def __str__(self):
         return self.isp_name
@@ -110,7 +114,7 @@ class DNSUpdateLog(models.Model):
 
     class Meta:
         db_table = 'dns_update_logs'
-        verbose_name = 'Domain Record Log'
+        verbose_name = 'DNS Update Log'
 
     def __str__(self):
         return f"{self.domain_record} - {self.ip}"
