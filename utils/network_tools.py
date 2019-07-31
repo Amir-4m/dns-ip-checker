@@ -2,6 +2,8 @@ import os
 import re
 import subprocess
 
+from django.conf import settings
+
 
 class PingCheck:
 
@@ -37,13 +39,12 @@ class PingCheck:
 
 class NetcatCheck:
 
-    def __init__(self, ip):
-        self.ip = ip
+    def __init__(self, ip, port):
         self.is_ping = False
-        self.nc()
+        self.nc(ip, port)
 
-    def nc(self):
-        cmd = f"netcat -v -z -w5 {self.ip} 22"
+    def nc(self, ip, port):
+        cmd = f"netcat -v -z -w{settings.get('NETCAT_TIMEOUT', 5)} {ip} {port}"
         process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         res = str(process.stderr.read())
 

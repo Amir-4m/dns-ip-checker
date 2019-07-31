@@ -67,7 +67,7 @@ class DomainNameRecord(models.Model):
     domain = models.ForeignKey(DomainZone, on_delete=models.PROTECT)
     ip = models.CharField(max_length=15, db_index=True)
     dns_record = models.CharField(max_length=32, blank=True, editable=False)
-    server = models.ForeignKey(Server, on_delete=models.PROTECT, null=True, blank=True)
+    server = models.ForeignKey(Server, on_delete=models.PROTECT)
     is_enable = models.BooleanField(default=True)
     start_time = models.TimeField(null=True)
     end_time = models.TimeField(null=True)

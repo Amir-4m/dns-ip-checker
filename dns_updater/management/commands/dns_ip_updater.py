@@ -44,7 +44,7 @@ class Command(BaseCommand):
         #     return
 
         # dm_record_list = DomainNameRecord.objects.filter(is_enable=True, network__in=[isp]).exclude(dns_record='')
-        dm_record_list = DomainNameRecord.objects.filter(is_enable=True).exclude(dns_record='')
+        dm_record_list = DomainNameRecord.objects.select_related('server').filter(is_enable=True).exclude(dns_record='')
         checked_ip_list = []
 
         self.stdout.write(
@@ -60,7 +60,7 @@ class Command(BaseCommand):
                 self.stdout.write(f"ALREADY CHECKED - {dm_record.ip}")
                 continue
 
-            ping_status = NetcatCheck(dm_record.ip).is_ping or PingCheck(dm_record.ip).is_ping
+            ping_status = NetcatCheck(dm_record.ip, dm_record.server.port).is_ping or PingCheck(dm_record.ip).is_ping
             PingLog.objects.create(
                 # TODO: get network name from network whois
                 # network_name=isp.isp_name,
