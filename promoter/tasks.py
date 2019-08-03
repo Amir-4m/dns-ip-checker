@@ -151,39 +151,39 @@ def remove_promotion(proxy):
 def get_proxies_stat(proxy):
     # TODO we can get proxy by id here or get object as args ?
     with TelegramClient('session', api_id, api_hash, proxy=(socks.HTTP, proxy_server, proxy_port)) as client:
-        for proxy in MTProxy.objects.all():
-            client.send_message('MTProxybot', '/myproxies')
-            to_id, msg_id, button_number = find_proxy(proxy)
 
-            client(GetBotCallbackAnswerRequest(
-                to_id,
-                msg_id,
-                data=bytes(f"proxies/{button_number}", 'utf-8'),
-            ))
+        client.send_message('MTProxybot', '/myproxies')
+        to_id, msg_id, button_number = find_proxy(proxy)
 
-            client(GetBotCallbackAnswerRequest(
-                to_id,
-                msg_id,
-                data=bytes(f"proxies/{button_number}/stats", 'utf-8'),
-            ))
+        client(GetBotCallbackAnswerRequest(
+            to_id,
+            msg_id,
+            data=bytes(f"proxies/{button_number}", 'utf-8'),
+        ))
 
-            stat_text = client.get_messages('MTProxybot')[0].message
+        client(GetBotCallbackAnswerRequest(
+            to_id,
+            msg_id,
+            data=bytes(f"proxies/{button_number}/stats", 'utf-8'),
+        ))
 
-            try:
-                stat = stat_text.split('\n')[11][11:]
-                stat_number = re.findall(r'[ 0-9]+', stat)[0].replace(" ", "")
-                stat_message = stat_text,
-                number_of_users = int(stat_number),
-                stat_logger.info(f"{proxy.host} ---- STAT: {stat}")
-            except Exception as e:
-                stat_message = "Sorry, we don't have stats for your proxy yet. Please come back later.",
-                number_of_users = None,
-                stat_logger.error(
-                    f"{proxy.host} ---- STAT: Sorry, we don't have stats for your proxy yet. Please come back later."
-                    f"\n{e}")
+        stat_text = client.get_messages('MTProxybot')[0].message
 
-            MTProxyStat.objects.create(
-                proxy=proxy,
-                stat_message=stat_message,
-                number_of_users=number_of_users,
-            )
+        try:
+            stat = stat_text.split('\n')[11][11:]
+            stat_number = re.findall(r'[ 0-9]+', stat)[0].replace(" ", "")
+            stat_message = stat_text,
+            number_of_users = int(stat_number),
+            stat_logger.info(f"{proxy.host} ---- STAT: {stat}")
+        except Exception as e:
+            stat_message = "Sorry, we don't have stats for your proxy yet. Please come back later.",
+            number_of_users = None,
+            stat_logger.error(
+                f"{proxy.host} ---- STAT: Sorry, we don't have stats for your proxy yet. Please come back later."
+                f"\n{e}")
+
+        MTProxyStat.objects.create(
+            proxy=proxy,
+            stat_message=stat_message,
+            number_of_users=number_of_users,
+        )
