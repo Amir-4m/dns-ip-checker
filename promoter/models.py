@@ -35,7 +35,7 @@ class MTProxyStat(models.Model):
     created_time = models.DateTimeField(auto_now_add=True)
     proxy = models.ForeignKey(MTProxy, on_delete=models.PROTECT)
     stat_message = models.TextField()
-    number_of_users = models.PositiveIntegerField()
+    number_of_users = models.PositiveIntegerField(null=True)
 
     class Meta:
         db_table = 'mtproxy_stats'

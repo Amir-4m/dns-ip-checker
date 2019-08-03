@@ -13,4 +13,4 @@ def create_mtproxy(sender, instance, created, **kwargs):
 
 @receiver(post_delete, sender=MTProxy)
 def delete_mtproxy(sender, instance, **kwargs):
-    delete_proxy.delay(instance.server, instance.port)
+    delete_proxy.delay(instance)
