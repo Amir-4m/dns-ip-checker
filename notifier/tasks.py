@@ -1,15 +1,14 @@
-import socks
+import os
 from celery import shared_task
 from telegram import Bot
 
 from django.conf import settings
 
-token = ''
+os.environ['https_proxy'] = 'https://pr.mehditaleblo.ir:65520'
+token = settings.BOT_TOKEN
 
 
 @shared_task
-def send_notif(log):  # get log or message to send
-    updater = Bot(token=token)
-    Bot.sendMessage(chat_id='@channelusername', text=log)
-
-    # TODO send logs and notif to group or channel or private chat
+def send_notification(channel_id, message):
+    bot = Bot(token=token)
+    bot.sendMessage(chat_id=channel_id, text=message)
