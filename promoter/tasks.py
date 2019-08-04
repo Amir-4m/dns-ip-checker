@@ -50,8 +50,8 @@ def find_proxy(proxy, page=None):
 
 @shared_task
 def new_proxy(host, port, secret_key):
-    try:
-        with TelegramClient('session', api_id, api_hash, proxy=(socks.HTTP, proxy_server, proxy_port)) as client:
+    with TelegramClient('session', api_id, api_hash, proxy=(socks.HTTP, proxy_server, proxy_port)) as client:
+        try:
             client.send_message('MTProxybot', '/newproxy')
             sleep(1)
             client.send_message('MTProxybot', f"{host}:{port}")
@@ -68,8 +68,8 @@ def new_proxy(host, port, secret_key):
 
             promotion_logger.info(f"{host}:{port} CREATED, PROXY_TAG: {proxy_tag}.")
 
-    except Exception as e:
-        promotion_logger.error(f"{host}:{port} NOT CREATED, ERROR: {e}.")
+        except Exception as e:
+            promotion_logger.error(f"{host}:{port} NOT CREATED, ERROR: {e}.")
 
 
 @shared_task
@@ -77,8 +77,12 @@ def delete_proxy(proxy):
     with TelegramClient('session', api_id, api_hash, proxy=(socks.HTTP, proxy_server, proxy_port)) as client:
         try:
             client.send_message('MTProxybot', '/myproxies')
-            sleep(1)
-            to_id, msg_id, button_number = find_proxy(proxy)
+            sleep(0.5)
+
+            try:
+                to_id, msg_id, button_number = find_proxy(proxy)
+            except Exception as e:
+                print(e)
 
             client(GetBotCallbackAnswerRequest(
                 to_id,
@@ -102,8 +106,12 @@ def set_promotion(proxy, channel):
     try:
         with TelegramClient('session', api_id, api_hash, proxy=(socks.HTTP, proxy_server, proxy_port)) as client:
             client.send_message('MTProxybot', '/myproxies')
-            sleep(1)
-            to_id, msg_id, button_number = find_proxy(proxy)
+            sleep(0.5)
+
+            try:
+                to_id, msg_id, button_number = find_proxy(proxy)
+            except Exception as e:
+                print(e)
 
             client(GetBotCallbackAnswerRequest(
                 to_id,
@@ -126,8 +134,11 @@ def remove_promotion(proxy):
     try:
         with TelegramClient('session', api_id, api_hash, proxy=(socks.HTTP, proxy_server, proxy_port)) as client:
             client.send_message('MTProxybot', '/myproxies')
-            sleep(1)
-            to_id, msg_id, button_number = find_proxy(proxy)
+            sleep(0.5)
+            try:
+                to_id, msg_id, button_number = find_proxy(proxy)
+            except Exception as e:
+                print(e)
 
             client(GetBotCallbackAnswerRequest(
                 to_id,
@@ -151,9 +162,12 @@ def remove_promotion(proxy):
 def get_proxies_stat(proxy):
     # TODO we can get proxy by id here or get object as args ?
     with TelegramClient('session', api_id, api_hash, proxy=(socks.HTTP, proxy_server, proxy_port)) as client:
-
         client.send_message('MTProxybot', '/myproxies')
-        to_id, msg_id, button_number = find_proxy(proxy)
+
+        try:
+            to_id, msg_id, button_number = find_proxy(proxy)
+        except Exception as e:
+            print(e)
 
         client(GetBotCallbackAnswerRequest(
             to_id,
