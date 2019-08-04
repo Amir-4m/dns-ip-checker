@@ -69,6 +69,8 @@ WSGI_APPLICATION = 'dns_ip_domain.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
+
+#
 DATABASES = {
     'default': {
         'ENGINE': DB_ENGINE,

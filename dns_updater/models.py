@@ -8,6 +8,7 @@ class Server(models.Model):
     name = models.CharField(max_length=50)
     description = models.TextField(blank=True)
     ip = models.CharField(max_length=15)
+    port = models.PositiveSmallIntegerField(default=22)
 
     class Meta:
         db_table = 'dns_servers'
