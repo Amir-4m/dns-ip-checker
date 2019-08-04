@@ -7,11 +7,13 @@ class Server(models.Model):
     updated_time = models.DateTimeField(auto_now=True)
     name = models.CharField(max_length=50)
     description = models.TextField(blank=True)
+    ssh_path_key = models.CharField(max_length=100, unique=True, null=True, blank=True)
     ip = models.CharField(max_length=15)
     port = models.PositiveSmallIntegerField(default=22)
 
     class Meta:
         db_table = 'dns_servers'
+        unique_together = ('ip', 'port')
 
     def __str__(self):
         return self.name

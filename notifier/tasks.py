@@ -4,7 +4,7 @@ from telegram import Bot
 
 from django.conf import settings
 
-os.environ['https_proxy'] = ''  # settings.PROXY
+os.environ['https_proxy'] = 'https://pr.mehditaleblo.ir:65520'  # settings.PROXY
 token = settings.BOT_TOKEN
 
 
