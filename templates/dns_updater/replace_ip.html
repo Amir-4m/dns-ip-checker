@@ -1,0 +1,44 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+    <style>
+        .myform {
+            border: 1px solid #ccc;
+            padding: 20px;
+            border-radius: 4px;
+            margin: 20px;
+        }
+
+        input[type=text] {
+            display: block;
+            margin: 10px;
+        }
+
+        input[type=submit] {
+            margin-top: 15px;
+        }
+
+        select {
+            margin-right: 5px;
+            width: 12%;
+            display: block;
+        }
+
+
+        input[type=password] {
+            display: block;
+        }
+
+    </style>
+    <div class="form-group myform">
+        <form method="POST">
+            {% csrf_token %}
+            {{ form }}
+            {% if form.errors %}
+                {% for er in form.errors %}
+                    <p class="alert">{{ er }}</p>
+                {% endfor %}
+            {% endif %}
+            <input type="submit" value="change" class="btn btn-primary">
+        </form>
+    </div>
+{% endblock %}

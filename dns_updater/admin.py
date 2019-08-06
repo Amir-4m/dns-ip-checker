@@ -1,20 +1,28 @@
+from django.shortcuts import redirect
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.admin import SimpleListFilter
+from django.template.response import TemplateResponse
 
 from import_export.admin import ImportExportModelAdmin
 from import_export import resources
 
 from .models import Server, ServerIPBank, DomainZone, DomainNameRecord, DNSUpdateLog, InternetServiceProvider
+from .forms import ReplaceIpForm
+from django.urls import path
 
 
 def make_disable(modeladmin, request, queryset):
     queryset.update(is_enable=False)
+
+
 make_disable.short_description = _("Mark selected items as disable")
 
 
 def make_enable(modeladmin, request, queryset):
     queryset.update(is_enable=True)
+
+
 make_enable.short_description = _("Mark selected items as enable")
 
 
@@ -41,6 +49,35 @@ class ImportExportServerIP(resources.ModelResource):
         skip_unchanged = True
 
 
+class ChangeIp(admin.ModelAdmin):
+    def get_urls(self):
+        urls = super().get_urls()
+        my_urls = [
+            path('ip/', self.admin_site.admin_view(self.change_ip), name='ip'),
+        ]
+        return my_urls + urls
+
+    def change_ip(self, request):
+        form = ReplaceIpForm()
+        if request.method == 'POST':
+            form = ReplaceIpForm(request.POST)
+            if form.is_valid():
+                data = form.cleaned_data
+                ip = data.get('ip')
+                change_to = data.get('change_to')
+
+                dm_records = DomainNameRecord.objects.filter(ip=ip)
+                for dm in dm_records:
+                    dm.ip = change_to
+                    dm.save()
+                return redirect('/admin65E7910/dns_updater/domainnamerecord/')
+
+        return TemplateResponse(request, 'dns_updater/replace_ip.html', context=dict(
+                                                                        self.admin_site.each_context(request),
+                                                                        form=form
+                                                                        ))
+
+
 @admin.register(Server)
 class ServerAdmin(admin.ModelAdmin):
     list_display = ['name', 'ip', 'id', 'created_time', 'description']
@@ -56,6 +93,7 @@ class ServerIPBankAdmin(ImportExportModelAdmin, admin.ModelAdmin):
 
     def make_unused(self, request, queryset):
         queryset.update(used_time=None)
+
     make_unused.short_description = _("Mark selected items as unused")
 
 
@@ -65,7 +103,7 @@ class DomainZoneAdmin(admin.ModelAdmin):
 
 
 @admin.register(DomainNameRecord)
-class DomainNameRecordAdmin(admin.ModelAdmin):
+class DomainNameRecordAdmin(ChangeIp, admin.ModelAdmin):
     list_display = ['sub_domain_name', 'domain', 'ip', 'networks', 'is_enable', 'updated_time', 'created_time']
     list_editable = ['ip', 'is_enable']
     list_filter = ['is_enable', 'domain', 'updated_time', 'server']
