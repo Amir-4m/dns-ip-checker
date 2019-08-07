@@ -8,9 +8,12 @@ from telegram import Bot
 
 
 @shared_task(queue='notifier')
-def send_notification(channel_id, message):
-    token = getattr(settings, 'NOTIFIER_BOT_TOKEN', '')
-    if not token:
-        return
-    bot = Bot(token=token)
-    bot.send_message(chat_id=channel_id, text=message)
+def send_notification(message):  # send this slug
+    send_to = message.telegramnotifier_set.all()
+
+    for notifier in send_to:
+    # token = getattr(settings, 'NOTIFIER_BOT_TOKEN', '')
+    # if not token:
+    #     return
+        bot = Bot(token=notifier.bot.token)
+        bot.send_message(chat_id=notifier.channel.channel_id, text=notifier.message.template)

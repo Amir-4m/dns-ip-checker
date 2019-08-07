@@ -25,6 +25,7 @@ INSTALLED_APPS = [
     'dns_updater',
     'domain_check',
     'ping_logs',
+    'notifier',
 
     'import_export',
     'django_celery_beat',
