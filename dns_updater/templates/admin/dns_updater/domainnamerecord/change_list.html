@@ -3,9 +3,7 @@
 
 {% block object-tools-items %}
     {{ block.super }}
-    {% if title == 'Select Domain Record to change' %}
     <li>
         <a href="{% url 'admin:ip' %}" class="btn btn-high" style="background-color: lightskyblue">Change IP</a>
     </li>
-    {% endif %}
 {% endblock %}

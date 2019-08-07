@@ -1,27 +1,36 @@
 from django.shortcuts import redirect
 from django.template.response import TemplateResponse
-from django.contrib import admin
+from django.contrib import messages
 
-from .forms import ReplaceIpForm
+from .forms import ReplaceIpAdminForm
 from .models import DomainNameRecord
 
 
-def change_ip(request):
-    form = ReplaceIpForm()
+def admin_change_ip(request):
+    form = ReplaceIpAdminForm()
     if request.method == 'POST':
-        form = ReplaceIpForm(request.POST)
+        form = ReplaceIpAdminForm(request.POST)
         if form.is_valid():
             data = form.cleaned_data
             ip = data.get('ip')
             change_to = data.get('change_to')
 
+            counter, success, wrong = 0, 0, 0
             dm_records = DomainNameRecord.objects.filter(ip=ip)
             for dm in dm_records:
-                dm.ip = change_to
-                dm.save()
+                counter += 1
+                try:
+                    dm.ip = change_to
+                    dm.save()
+                    success += 1
+                except Exception as e:
+                    print(e)  # log error
+                    wrong += 1
+            if wrong > 0:
+                messages.warning(request, f'from {counter} IPs, {success} changed successfully {wrong} not change')
+            else:
+                messages.success(request, f'{counter} IPs, changed successfully')
+
             return redirect('/admin65E7910/dns_updater/domainnamerecord/')
 
-    return TemplateResponse(request, 'dns_updater/replace_ip.html', context=dict(
-        # admin.ModelAdmin.admin_site.each_context(request),
-        form=form
-    ))
+    return TemplateResponse(request, 'dns_updater/admin_change_ip.html', context={'form': form})

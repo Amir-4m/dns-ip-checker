@@ -16,8 +16,6 @@ Including another URLconf
 from django.urls import path
 from django.contrib import admin
 
-from dns_updater.views import change_ip
-
 urlpatterns = [
     path('admin65E7910/', admin.site.urls),
 ]
