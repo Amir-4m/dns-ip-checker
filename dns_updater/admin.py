@@ -47,7 +47,7 @@ class ImportExportServerIP(resources.ModelResource):
         skip_unchanged = True
 
 
-class ChangeIp(admin.ModelAdmin):
+class DomainNameRecordChangeIp(admin.ModelAdmin):
     def get_urls(self):
         urls = super().get_urls()
         my_urls = [
@@ -81,7 +81,7 @@ class DomainZoneAdmin(admin.ModelAdmin):
 
 
 @admin.register(DomainNameRecord)
-class DomainNameRecordAdmin(ChangeIp, admin.ModelAdmin):
+class DomainNameRecordAdmin(DomainNameRecordChangeIp, admin.ModelAdmin):
     list_display = ['sub_domain_name', 'domain', 'ip', 'networks', 'is_enable', 'updated_time', 'created_time']
     list_editable = ['ip', 'is_enable']
     list_filter = ['is_enable', 'domain', 'updated_time', 'server']
