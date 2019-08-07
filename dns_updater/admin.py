@@ -6,7 +6,7 @@ from import_export.admin import ImportExportModelAdmin
 from import_export import resources
 
 from .models import Server, ServerIPBank, DomainZone, DomainNameRecord, DNSUpdateLog, InternetServiceProvider
-from .views import admin_change_ip
+from .views import bulk_change_ip_admin
 from django.urls import path
 
 
@@ -47,15 +47,6 @@ class ImportExportServerIP(resources.ModelResource):
         skip_unchanged = True
 
 
-class DomainNameRecordChangeIp(admin.ModelAdmin):
-    def get_urls(self):
-        urls = super().get_urls()
-        my_urls = [
-            path('ip/', self.admin_site.admin_view(admin_change_ip), name='ip'),
-        ]
-        return my_urls + urls
-
-
 @admin.register(Server)
 class ServerAdmin(admin.ModelAdmin):
     list_display = ['name', 'ip', 'id', 'created_time', 'description']
@@ -81,7 +72,7 @@ class DomainZoneAdmin(admin.ModelAdmin):
 
 
 @admin.register(DomainNameRecord)
-class DomainNameRecordAdmin(DomainNameRecordChangeIp, admin.ModelAdmin):
+class DomainNameRecordAdmin(admin.ModelAdmin):
     list_display = ['sub_domain_name', 'domain', 'ip', 'networks', 'is_enable', 'updated_time', 'created_time']
     list_editable = ['ip', 'is_enable']
     list_filter = ['is_enable', 'domain', 'updated_time', 'server']
@@ -92,6 +83,13 @@ class DomainNameRecordAdmin(DomainNameRecordChangeIp, admin.ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return False
+
+    def get_urls(self):
+        urls = super().get_urls()
+        my_urls = [
+            path('bulk_change_ip/', self.admin_site.admin_view(bulk_change_ip_admin), name='bulk-change-ip'),
+        ]
+        return my_urls + urls
 
 
 @admin.register(DNSUpdateLog)

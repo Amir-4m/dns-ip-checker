@@ -6,31 +6,24 @@ from .forms import ReplaceIpAdminForm
 from .models import DomainNameRecord
 
 
-def admin_change_ip(request):
+def bulk_change_ip_admin(request):
     form = ReplaceIpAdminForm()
     if request.method == 'POST':
         form = ReplaceIpAdminForm(request.POST)
         if form.is_valid():
-            data = form.cleaned_data
-            ip = data.get('ip')
-            change_to = data.get('change_to')
+            dm_records = DomainNameRecord.objects.filter(ip=form.cleaned_data['ip'])
 
-            counter, success, wrong = 0, 0, 0
-            dm_records = DomainNameRecord.objects.filter(ip=ip)
+            counter = 0
             for dm in dm_records:
                 counter += 1
                 try:
-                    dm.ip = change_to
+                    dm.ip = form.cleaned_data['change_to']
                     dm.save()
-                    success += 1
                 except Exception as e:
-                    print(e)  # log error
-                    wrong += 1
-            if wrong > 0:
-                messages.warning(request, f'from {counter} IPs, {success} changed successfully {wrong} not change')
-            else:
-                messages.success(request, f'{counter} IPs, changed successfully')
+                    messages.warning(request, f"{dm.domain_full_name} could not change to {form.cleaned_data['change_to']}, reason: {e}")
 
-            return redirect('/admin65E7910/dns_updater/domainnamerecord/')
+            messages.success(request, f'{counter} IPs changed successfully')
 
-    return TemplateResponse(request, 'dns_updater/admin_change_ip.html', context={'form': form})
+            return redirect('admin:dns_updater.')
+
+    return TemplateResponse(request, 'admin/dns_updater/domainnamerecord/bulk_change_ip.html', context={'form': form})
