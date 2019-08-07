@@ -37,5 +37,5 @@ PROXY_HOST = ''
 PROXY_PORT = 0
 
 # Notifier
-BOT_TOKEN = ''
+NOTIFIER_BOT_TOKEN = ''
 ```

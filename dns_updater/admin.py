@@ -6,15 +6,21 @@ from import_export.admin import ImportExportModelAdmin
 from import_export import resources
 
 from .models import Server, ServerIPBank, DomainZone, DomainNameRecord, DNSUpdateLog, InternetServiceProvider
+from .views import bulk_change_ip_admin
+from django.urls import path
 
 
 def make_disable(modeladmin, request, queryset):
     queryset.update(is_enable=False)
+
+
 make_disable.short_description = _("Mark selected items as disable")
 
 
 def make_enable(modeladmin, request, queryset):
     queryset.update(is_enable=True)
+
+
 make_enable.short_description = _("Mark selected items as enable")
 
 
@@ -56,6 +62,7 @@ class ServerIPBankAdmin(ImportExportModelAdmin, admin.ModelAdmin):
 
     def make_unused(self, request, queryset):
         queryset.update(used_time=None)
+
     make_unused.short_description = _("Mark selected items as unused")
 
 
@@ -76,6 +83,13 @@ class DomainNameRecordAdmin(admin.ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return False
+
+    def get_urls(self):
+        urls = super().get_urls()
+        my_urls = [
+            path('bulk_change_ip/', self.admin_site.admin_view(bulk_change_ip_admin), name='bulk-change-ip'),
+        ]
+        return my_urls + urls
 
 
 @admin.register(DNSUpdateLog)

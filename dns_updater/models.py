@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.validators import validate_ipv4_address
 from django.utils.translation import ugettext_lazy as _
 
 
@@ -7,7 +8,8 @@ class Server(models.Model):
     updated_time = models.DateTimeField(auto_now=True)
     name = models.CharField(max_length=50)
     description = models.TextField(blank=True)
-    ip = models.CharField(max_length=15)
+    ssh_path_key = models.CharField(max_length=100, unique=True, null=True, blank=True)
+    ip = models.CharField(_('server ip'), max_length=15, unique=True, validators=[validate_ipv4_address])
     port = models.PositiveSmallIntegerField(default=22)
 
     class Meta:

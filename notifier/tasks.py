@@ -1,14 +1,16 @@
 # import os
+from django.conf import settings
 from celery import shared_task
 from telegram import Bot
 
-from django.conf import settings
 
 # os.environ['https_proxy'] = ''  # settings.PROXY
-token = settings.BOT_TOKEN
 
 
-@shared_task
+@shared_task(queue='notifier')
 def send_notification(channel_id, message):
+    token = getattr(settings, 'NOTIFIER_BOT_TOKEN', '')
+    if not token:
+        return
     bot = Bot(token=token)
     bot.sendMessage(chat_id=channel_id, text=message)

@@ -32,7 +32,7 @@ class PingCheck:
             self.time = ping.split('\n')[-3].split()[-1].lstrip('time')
             self.success = 100.0 - float(ping.split('\n')[-3].split(',')[2].rstrip('% packet loss'))
         except Exception as e:
-            print(f"{self.domain if self.domain is not '' else self.ip} {e}")
+            print(f"{self.domain or self.ip} {e}")
 
         self.is_ping = self.success >= 60.0
 
