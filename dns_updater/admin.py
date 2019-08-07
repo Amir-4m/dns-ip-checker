@@ -9,6 +9,7 @@ from import_export import resources
 
 from .models import Server, ServerIPBank, DomainZone, DomainNameRecord, DNSUpdateLog, InternetServiceProvider
 from .forms import ReplaceIpForm
+from .views import change_ip
 from django.urls import path
 
 
@@ -53,29 +54,30 @@ class ChangeIp(admin.ModelAdmin):
     def get_urls(self):
         urls = super().get_urls()
         my_urls = [
-            path('ip/', self.admin_site.admin_view(self.change_ip), name='ip'),
+            path('ip/', self.admin_site.admin_view(change_ip), name='ip'),
         ]
         return my_urls + urls
+    #
+    # def change_ip(self, request):
+    #     form = ReplaceIpForm()
+    #     if request.method == 'POST':
+    #         form = ReplaceIpForm(request.POST)
+    #         if form.is_valid():
+    #             data = form.cleaned_data
+    #             ip = data.get('ip')
+    #             change_to = data.get('change_to')
+    #
+    #             dm_records = DomainNameRecord.objects.filter(ip=ip)
+    #             for dm in dm_records:
+    #                 dm.ip = change_to
+    #                 dm.save()
+    #             return redirect('/admin65E7910/dns_updater/domainnamerecord/')
+    #
+    #     return TemplateResponse(request, 'dns_updater/replace_ip.html', context=dict(
+    #                                                                     self.admin_site.each_context(request),
+    #                                                                     form=form
+    #                                                                     ))
 
-    def change_ip(self, request):
-        form = ReplaceIpForm()
-        if request.method == 'POST':
-            form = ReplaceIpForm(request.POST)
-            if form.is_valid():
-                data = form.cleaned_data
-                ip = data.get('ip')
-                change_to = data.get('change_to')
-
-                dm_records = DomainNameRecord.objects.filter(ip=ip)
-                for dm in dm_records:
-                    dm.ip = change_to
-                    dm.save()
-                return redirect('/admin65E7910/dns_updater/domainnamerecord/')
-
-        return TemplateResponse(request, 'dns_updater/replace_ip.html', context=dict(
-                                                                        self.admin_site.each_context(request),
-                                                                        form=form
-                                                                        ))
 
 
 @admin.register(Server)

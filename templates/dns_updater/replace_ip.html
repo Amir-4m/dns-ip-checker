@@ -17,15 +17,13 @@
             margin-top: 15px;
         }
 
-        select {
-            margin-right: 5px;
-            width: 12%;
-            display: block;
-        }
-
-
-        input[type=password] {
-            display: block;
+        .back {
+            background: #79aec8;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 20px;
         }
 
     </style>
@@ -41,4 +39,6 @@
             <input type="submit" value="change" class="btn btn-primary">
         </form>
     </div>
+    <a style="color: white" href="{% url 'admin:dns_updater_domainnamerecord_changelist' %}" class="btn btn-primary back">back to DomainNameRecords</a>
+
 {% endblock %}
