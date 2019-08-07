@@ -10,7 +10,7 @@ class PingLog(models.Model):
     is_ping = models.BooleanField('was pinged?')
 
     class Meta:
-        db_table = 'dns_ping_log'
+        db_table = 'ping_log'
 
     def __str__(self):
         return f"{self.network or self.network_name} - {self.domain or self.ip} - {self.created_time}"

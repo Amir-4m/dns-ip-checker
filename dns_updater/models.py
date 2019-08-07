@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.validators import validate_ipv4_address
 from django.utils.translation import ugettext_lazy as _
 
 
@@ -7,11 +8,13 @@ class Server(models.Model):
     updated_time = models.DateTimeField(auto_now=True)
     name = models.CharField(max_length=50)
     description = models.TextField(blank=True)
-    ip = models.CharField(max_length=15)
+    ssh_path_key = models.CharField(max_length=100, unique=True, null=True, blank=True)
+    ip = models.CharField(_('server ip'), max_length=15, unique=True, validators=[validate_ipv4_address])
     port = models.PositiveSmallIntegerField(default=22)
 
     class Meta:
         db_table = 'dns_servers'
+        verbose_name = 'Server'
 
     def __str__(self):
         return self.name
@@ -21,13 +24,14 @@ class ServerIPBank(models.Model):
     created_time = models.DateTimeField(auto_now_add=True)
     updated_time = models.DateTimeField(auto_now=True)
     ip = models.CharField(max_length=15, unique=True)
-    server = models.ForeignKey(Server, on_delete=models.CASCADE)
+    server = models.ForeignKey(Server, on_delete=models.PROTECT)
     used_time = models.DateTimeField(null=True, editable=False)
     expire_time = models.DateTimeField(null=True, blank=True)
     is_enable = models.BooleanField(default=True)
 
     class Meta:
         db_table = 'dns_servers_ip'
+        verbose_name = 'Server IP Bank'
 
     def __str__(self):
         return self.ip
@@ -40,6 +44,7 @@ class InternetServiceProvider(models.Model):
 
     class Meta:
         db_table = 'dns_isp'
+        verbose_name = 'ISP'
 
     def __str__(self):
         return self.isp_name
@@ -64,7 +69,7 @@ class DomainNameRecord(models.Model):
     domain = models.ForeignKey(DomainZone, on_delete=models.PROTECT)
     ip = models.CharField(max_length=15, db_index=True)
     dns_record = models.CharField(max_length=32, blank=True, editable=False)
-    server = models.ForeignKey(Server, on_delete=models.PROTECT, null=True, blank=True)
+    server = models.ForeignKey(Server, on_delete=models.PROTECT)
     is_enable = models.BooleanField(default=True)
     start_time = models.TimeField(null=True)
     end_time = models.TimeField(null=True)
@@ -111,7 +116,7 @@ class DNSUpdateLog(models.Model):
 
     class Meta:
         db_table = 'dns_update_logs'
-        verbose_name = 'Domain Record Log'
+        verbose_name = 'DNS Update Log'
 
     def __str__(self):
         return f"{self.domain_record} - {self.ip}"
