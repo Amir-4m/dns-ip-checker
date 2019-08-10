@@ -1,1 +1,1 @@
-default_app_config = 'proxybot.apps.ProxybotConfig'
+default_app_config = 'promoter.apps.ProxybotConfig'

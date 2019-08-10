@@ -2,7 +2,7 @@ from django.apps import AppConfig
 
 
 class ProxybotConfig(AppConfig):
-    name = 'proxybot'
+    name = 'promoter'
 
     def ready(self):
-        import proxybot.signals
+        import promoter.signals

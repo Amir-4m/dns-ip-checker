@@ -11,10 +11,10 @@ from django.conf import settings
 
 from .models import MTProxy, MTProxyStat
 
-api_id = settings.API_ID
-api_hash = settings.API_HASH
+api_id = settings.TELEGRAM_API_ID
+api_hash = settings.TELEGRAM_API_HASH
 
-proxy_server = settings.PROXY_SERVER
+proxy_server = settings.PROXY_HOST
 proxy_port = settings.PROXY_PORT
 
 promotion_logger = logging.getLogger('channel_promotion')
