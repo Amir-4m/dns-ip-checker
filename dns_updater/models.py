@@ -1,9 +1,6 @@
 from django.db import models
-<<<<<<< HEAD
-=======
 from django.core.validators import validate_ipv4_address
 from django.utils.translation import ugettext_lazy as _
->>>>>>> master
 
 
 class Server(models.Model):
@@ -11,14 +8,6 @@ class Server(models.Model):
     updated_time = models.DateTimeField(auto_now=True)
     name = models.CharField(max_length=50)
     description = models.TextField(blank=True)
-<<<<<<< HEAD
-    ip = models.CharField(max_length=15, unique=True)
-    ssh_key_path = models.CharField(max_length=300, unique=True)
-
-    class Meta:
-        db_table = 'dns_servers'
-        unique_together = ('ip', 'ssh_key_path')
-=======
     ssh_path_key = models.CharField(max_length=100, unique=True, null=True, blank=True)
     ip = models.CharField(_('server ip'), max_length=15, unique=True, validators=[validate_ipv4_address])
     port = models.PositiveSmallIntegerField(default=22)
@@ -26,7 +15,6 @@ class Server(models.Model):
     class Meta:
         db_table = 'dns_servers'
         verbose_name = 'Server'
->>>>>>> master
 
     def __str__(self):
         return self.name
