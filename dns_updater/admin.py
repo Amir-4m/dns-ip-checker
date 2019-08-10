@@ -5,21 +5,23 @@ from django.contrib.admin import SimpleListFilter
 from import_export.admin import ImportExportModelAdmin
 from import_export import resources
 
-from .models import Server, ServerIPBank, DomainZone, DomainNameRecord, DNSUpdateLog
+from .models import Server, ServerIPBank, DomainZone, DomainNameRecord, DNSUpdateLog, InternetServiceProvider
+from .views import bulk_change_ip_admin
+from django.urls import path
 
 
 def make_disable(modeladmin, request, queryset):
     queryset.update(is_enable=False)
 
 
-make_disable.short_description = _("Mark selected as disable")
+make_disable.short_description = _("Mark selected items as disable")
 
 
 def make_enable(modeladmin, request, queryset):
     queryset.update(is_enable=True)
 
 
-make_enable.short_description = _("Mark selected as enable")
+make_enable.short_description = _("Mark selected items as enable")
 
 
 class IsUsedFilter(SimpleListFilter):
@@ -39,7 +41,7 @@ class IsUsedFilter(SimpleListFilter):
 class ImportExportServerIP(resources.ModelResource):
     class Meta:
         model = ServerIPBank
-        exclude = ('id', )
+        exclude = ('id',)
         import_id_fields = ('server', 'ip')
         export_order = ('ip', 'server', 'used_time', 'is_enable', 'created_time')
         skip_unchanged = True
@@ -54,9 +56,14 @@ class ServerAdmin(admin.ModelAdmin):
 @admin.register(ServerIPBank)
 class ServerIPBankAdmin(ImportExportModelAdmin, admin.ModelAdmin):
     list_display = ['ip', 'used_time', 'server', 'created_time', 'updated_time', 'is_enable']
-    list_filter = ['is_enable', 'server', IsUsedFilter]
-    actions = [make_disable, make_enable]
+    list_filter = ['is_enable', IsUsedFilter, 'server']
+    actions = [make_disable, make_enable, 'make_unused']
     resource_class = ImportExportServerIP
+
+    def make_unused(self, request, queryset):
+        queryset.update(used_time=None)
+
+    make_unused.short_description = _("Mark selected items as unused")
 
 
 @admin.register(DomainZone)
@@ -66,7 +73,7 @@ class DomainZoneAdmin(admin.ModelAdmin):
 
 @admin.register(DomainNameRecord)
 class DomainNameRecordAdmin(admin.ModelAdmin):
-    list_display = ['sub_domain_name', 'domain', 'ip', 'is_enable', 'updated_time', 'created_time']
+    list_display = ['sub_domain_name', 'domain', 'ip', 'networks', 'is_enable', 'updated_time', 'created_time']
     list_editable = ['ip', 'is_enable']
     list_filter = ['is_enable', 'domain', 'updated_time', 'server']
     search_fields = ['ip', 'sub_domain_name', 'dns_record', 'domain__domain_name', 'domain__zone_id']
@@ -76,6 +83,13 @@ class DomainNameRecordAdmin(admin.ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return False
+
+    def get_urls(self):
+        urls = super().get_urls()
+        my_urls = [
+            path('bulk_change_ip/', self.admin_site.admin_view(bulk_change_ip_admin), name='bulk-change-ip'),
+        ]
+        return my_urls + urls
 
 
 @admin.register(DNSUpdateLog)
@@ -92,3 +106,8 @@ class DomainLoggerAdmin(admin.ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return False
+
+
+@admin.register(InternetServiceProvider)
+class InternetServiceProviderAdmin(admin.ModelAdmin):
+    list_display = ['isp_name', 'slug']

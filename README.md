@@ -28,13 +28,15 @@ STATIC_URL = '/static/'
 CLOUDFLARE_EMAIL = 'YOUR EMAIL'
 CLOUDFLARE_API_KEY = 'YOUR API KEY'
 
+NETCAT_TIMEOUT = 1
 
-promoter app 
+# Promoter
+TELEGRAM_API_ID = 0
+TELEGRAM_API_HASH = ''
+PROXY_HOST = ''
+PROXY_PORT = 0
 
-api_id = ''
-api_hash = ''
-
-proxy_server = ''
-proxy_port = ''
+# Notifier
+NOTIFIER_BOT_TOKEN = ''
 
 ```

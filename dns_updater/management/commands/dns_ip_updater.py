@@ -1,13 +1,25 @@
 import fcntl
+<<<<<<< HEAD
 
 import requests
+=======
+# import requests
+>>>>>>> master
 
 from django.utils import timezone
 from django.core.management.base import BaseCommand
 
+<<<<<<< HEAD
 from dns_updater.models import DomainNameRecord, ServerIPBank, InternetServiceProvider
 from ping_logs.models import PingLog
 from utils.ping import PingCheck
+=======
+from dns_updater.models import DomainNameRecord, ServerIPBank  # , InternetServiceProvider
+from ping_logs.models import PingLog
+
+from utils.network_tools import NetcatCheck, PingCheck
+
+>>>>>>> master
 
 file_handle = None
 
@@ -43,20 +55,30 @@ class Command(BaseCommand):
         #     return
 
         # dm_record_list = DomainNameRecord.objects.filter(is_enable=True, network__in=[isp]).exclude(dns_record='')
+<<<<<<< HEAD
         dm_record_list = DomainNameRecord.objects.filter(is_enable=True).exclude(dns_record='')
         changed_ip_list = []
+=======
+        dm_record_list = DomainNameRecord.objects.select_related('server').filter(is_enable=True).exclude(dns_record='')
+        checked_ip_list = []
+>>>>>>> master
 
         self.stdout.write(
             f" {timezone.now().strftime('%Y-%m-%d %H:%M:%S')} START TO PING DOMAINS ".center(120, "=")
         )
 
+<<<<<<< HEAD
         my_network = requests.get('http://ip-api.com/json/').json().get('isp')  # Sepanta Wireless for me
         #  filter newtrok if exists
         network = InternetServiceProvider.objects.get(isp_name=my_network)  # for exmple
+=======
+        # network = requests.get('http://ip-api.com/json/').json()
+>>>>>>> master
 
         for dm_record in dm_record_list:
             self.stdout.write(f"PROCCESSING: {timezone.now().strftime('%Y-%m-%d %H:%M:%S')} {dm_record.domain_full_name}:{dm_record.ip}")
             dm_record.refresh_from_db()
+<<<<<<< HEAD
             self.stdout.write(f"REFRESH: {timezone.now().strftime('%Y-%m-%d %H:%M:%S')} {dm_record.domain_full_name}:{dm_record.ip}")
             ping = PingCheck(dm_record.ip)
             self.stdout.write(f"PING: {timezone.now().strftime('%Y-%m-%d %H:%M:%S')} {dm_record.domain_full_name}:{dm_record.ip}")
@@ -77,10 +99,30 @@ class Command(BaseCommand):
                 continue
 
             if ping.is_ping:
+=======
+            if dm_record.ip in checked_ip_list:
+                self.stdout.write(f"ALREADY CHECKED - {dm_record.ip}")
+                continue
+
+            ping_status = NetcatCheck(dm_record.ip, dm_record.server.port).is_ping or PingCheck(dm_record.ip).is_ping
+            PingLog.objects.create(
+                # TODO: get network name from network whois
+                # network_name=isp.isp_name,
+                # network=isp,
+                network_name='',
+                domain=dm_record.domain_full_name,
+                ip=dm_record.ip,
+                is_ping=ping_status
+            )
+            checked_ip_list.append(dm_record.ip)
+
+            if ping_status:
+>>>>>>> master
                 self.stdout.write(f"PING OK - {dm_record.domain_full_name}:{dm_record.ip}")
                 continue
 
             self.stdout.write(f"PING FAILED - {dm_record.domain_full_name}:{dm_record.ip}")
+            ServerIPBank.objects.filter(ip=dm_record.ip).update(is_enable=False)
 
             ip_object = ServerIPBank.objects.filter(
                 used_time__isnull=True,
@@ -100,6 +142,6 @@ class Command(BaseCommand):
                 ip_object.used_time = timezone.now()
                 ip_object.save()
 
-                changed_ip_list.append(ip_object.ip)
+                checked_ip_list.append(ip_object.ip)
 
                 self.stdout.write(f"IP CHANGED:{dm_record.domain_full_name}:{ip_object.ip}")

@@ -25,6 +25,8 @@ INSTALLED_APPS = [
     'dns_updater',
     'domain_check',
     'promoter',
+    'ping_logs',
+
 
     'import_export',
     'django_celery_beat',
@@ -52,14 +54,20 @@ ROOT_URLCONF = 'dns_ip_domain.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
-        'APP_DIRS': True,
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
+        # 'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+            ],
+            'loaders': [
+                ('django.template.loaders.cached.Loader', [
+                    'django.template.loaders.filesystem.Loader',
+                    'django.template.loaders.app_directories.Loader',
+                ]),
             ],
         },
     },
@@ -69,6 +77,8 @@ WSGI_APPLICATION = 'dns_ip_domain.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
+
+#
 DATABASES = {
     'default': {
         'ENGINE': DB_ENGINE,
@@ -78,6 +88,20 @@ DATABASES = {
         'HOST': DB_HOST,
         'PORT': DB_PORT,
     }
+}
+
+CACHES = {
+    'default': {
+        'BACKEND': CACHE_BACKEND,
+        'LOCATION': CACHE_HOST,
+        'KEY_PREFIX': 'VAS_PAYMENT'
+    },
+}
+
+CELERY_BROKER_URL = 'amqp://%(USER)s:%(PASS)s@%(HOST)s' % {
+    'USER': CELERY_BROKER_USER,
+    'PASS': CELERY_BROKER_PASS,
+    'HOST': CELERY_BROKER_HOST,
 }
 
 # Password validation
@@ -131,16 +155,16 @@ LOGGING = ({
         'file': {
             'level': 'DEBUG' if DEBUG else 'INFO',
             'class': 'logging.FileHandler',
-            'formatter': 'verbose',
+            'formatter': 'verbose' if DEBUG else 'simple',
             'filename': os.path.join(LOG_DIR, 'django.log'),
         },
     },
     'loggers': {
-        'domain.ping_checker': {
+        'domain_check': {
             'level': 'DEBUG',
             'handlers': ['console', 'file']
         },
-        'domain.dns_updater': {
+        'dns_updater': {
             'level': 'DEBUG',
             'handlers': ['file']
         },
@@ -149,4 +173,3 @@ LOGGING = ({
 
 # IMPORT_EXPORT_USE_TRANSACTIONS = True
 # IMPORT_EXPORT_SKIP_ADMIN_LOG = True
-

@@ -4,10 +4,9 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 from .tasks import cloudflare_create, cloudflare_edit, cloudflare_delete
-
 from .models import DomainNameRecord
 
-logger = logging.getLogger('domain.dns_updater')
+logger = logging.getLogger('dns_updater')
 
 
 @receiver(post_save, sender=DomainNameRecord)
@@ -50,6 +49,13 @@ def create_record(sender, instance, created, **kwargs):
     else:
         logger.info(f"NO API CALLED domain:{instance.domain_full_name} ip:{instance.ip}")
         return
+
+    if created:
+        # TODO ssh command connect to server
+        # TODO add ip to server
+        # TODO get nc (netcat) save results
+        # TODO delete ip
+        pass
 
 
 # @receiver(post_save, sender=DomainZone)
