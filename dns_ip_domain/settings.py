@@ -98,11 +98,11 @@ CACHES = {
     },
 }
 
-CELERY_BROKER_URL = 'amqp://%(USER)s:%(PASS)s@%(HOST)s' % {
-    'USER': CELERY_BROKER_USER,
-    'PASS': CELERY_BROKER_PASS,
-    'HOST': CELERY_BROKER_HOST,
-}
+# CELERY_BROKER_URL = 'amqp://%(USER)s:%(PASS)s@%(HOST)s' % {
+#     'USER': CELERY_BROKER_USER,
+#     'PASS': CELERY_BROKER_PASS,
+#     'HOST': CELERY_BROKER_HOST,
+# }
 
 # Password validation
 # https://docs.djangoproject.com/en/1.11/ref/settings/#auth-password-validators
@@ -127,7 +127,7 @@ LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'Asia/Tehran'
 USE_I18N = True
 USE_L10N = False
-USE_TZ = False
+USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
