@@ -38,4 +38,5 @@ PROXY_PORT = 0
 
 # Notifier
 NOTIFIER_BOT_TOKEN = ''
+
 ```

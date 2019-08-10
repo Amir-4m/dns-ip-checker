@@ -27,3 +27,4 @@ def bulk_change_ip_admin(request):
             return redirect('admin:dns_updater.')
 
     return TemplateResponse(request, 'admin/dns_updater/domainnamerecord/bulk_change_ip.html', context={'form': form})
+

@@ -23,11 +23,14 @@ class Server(models.Model):
 class ServerIPBank(models.Model):
     created_time = models.DateTimeField(auto_now_add=True)
     updated_time = models.DateTimeField(auto_now=True)
+    last_check = models.DateTimeField(null=True)
+    filter_time = models.DateTimeField(null=True)
     ip = models.CharField(max_length=15, unique=True)
     server = models.ForeignKey(Server, on_delete=models.PROTECT)
     used_time = models.DateTimeField(null=True, editable=False)
     expire_time = models.DateTimeField(null=True, blank=True)
     is_enable = models.BooleanField(default=True)
+    is_set = models.BooleanField(default=False)
 
     class Meta:
         db_table = 'dns_servers_ip'

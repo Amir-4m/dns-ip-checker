@@ -34,7 +34,7 @@ def create_record(sender, instance, created, **kwargs):
 
     elif instance.is_enable_changed() and not instance.is_enable:  # True -> False
         if not instance.dns_record:
-            logger.warning(f"domain:{instance.domain_full_name} has no dns_record key")
+            logger.warning(f"domain:{instance.domain_fqull_name} has no dns_record key")
             return
         cloudflare_delete.delay(instance.id, instance.domain_full_name, instance.ip, instance.dns_record,
                                 instance.domain.zone_id)
@@ -56,6 +56,7 @@ def create_record(sender, instance, created, **kwargs):
         # TODO get nc (netcat) save results
         # TODO delete ip
         pass
+
 
 # @receiver(post_save, sender=DomainZone)
 # def get_dns_records(sender, instance, created, **kwargs):
