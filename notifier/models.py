@@ -19,7 +19,7 @@ class NotificationRoute(models.Model):
     created_time = models.DateTimeField(_('created time'), auto_now_add=True)
     bot = models.ForeignKey('tel_tools.TelegramBot', on_delete=models.PROTECT)
     channel = models.ForeignKey('tel_tools.TelegramChannel', on_delete=models.PROTECT)
-    message = models.ForeignKey(NotificationMessage, on_delete=models.PROTECT)
+    message = models.ForeignKey(NotificationMessage, on_delete=models.PROTECT, related_name='message_routes')
     is_enable = models.BooleanField(_('is enable'), default=True)
 
     class Meta:

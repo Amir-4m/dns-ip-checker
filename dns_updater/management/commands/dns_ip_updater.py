@@ -92,7 +92,10 @@ class Command(BaseCommand):
                 server=dm_record.server
             ).first()
             if ip_object is None:
-                send_notification.delay('SERVER_IP_BANK_EMPTY')
+                send_notification.delay(
+                    'SERVER_IP_BANK_EMPTY',
+                    template_context=dict(domain=dm_record.domain_full_name, server=dm_record.server)
+                )
                 self.stderr.write(f"NO IP IN BANK - {dm_record.domain_full_name}, {dm_record.server}")
                 continue
 
