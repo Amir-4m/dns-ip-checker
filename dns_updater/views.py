@@ -24,6 +24,6 @@ def bulk_change_ip_admin(request):
 
             messages.success(request, f'{counter} IPs changed successfully')
 
-            return redirect('admin:dns_updater.')
+            return redirect('admin:dns_updater_domainnamerecord_changelist')
 
     return TemplateResponse(request, 'admin/dns_updater/domainnamerecord/bulk_change_ip.html', context={'form': form})
