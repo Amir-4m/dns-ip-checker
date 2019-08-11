@@ -27,7 +27,7 @@ INSTALLED_APPS = [
     'promoter',
     'ping_logs',
     'notifier',
-
+    'tel_tools',
 
     'import_export',
     'django_celery_beat',

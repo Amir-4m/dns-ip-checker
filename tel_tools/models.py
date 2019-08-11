@@ -6,7 +6,7 @@ class TelegramBot(models.Model):
     created_time = models.DateTimeField(_('created time'), auto_now_add=True)
     updated_time = models.DateTimeField(_('updated time'), auto_now=True)
     name = models.CharField(_('bot name'), max_length=60)
-    token = models.CharField(max_length=45, unique=True)
+    token = models.CharField(_('token'), max_length=45, unique=True)
 
     class Meta:
         db_table = 'telegram_bots'
@@ -19,8 +19,8 @@ class TelegramChannel(models.Model):
     created_time = models.DateTimeField(_('created time'), auto_now_add=True)
     updated_time = models.DateTimeField(_('updated time'), auto_now=True)
     title = models.CharField(_('channel title'), max_length=60)
-    channel_id = models.BigIntegerField(unique=True)
-    username = models.CharField(max_length=60)
+    channel_id = models.BigIntegerField(_('channel id'), unique=True)
+    username = models.CharField(_('username'), max_length=60)
 
     class Meta:
         db_table = 'telegram_channels'

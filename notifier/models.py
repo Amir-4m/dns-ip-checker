@@ -1,11 +1,12 @@
 from django.db import models
+from django.utils.translation import ugettext_lazy as _
 
 
 class NotificationMessage(models.Model):
     created_time = models.DateTimeField(_('created time'), auto_now_add=True)
     updated_time = models.DateTimeField(_('updated time'), auto_now=True)
-    slug = models.SlugField(unique=True)
-    template = models.TextField()
+    slug = models.SlugField(_('slug'), unique=True)
+    template = models.TextField(_('template'))
 
     class Meta:
         db_table = 'notifier_messages'
@@ -16,10 +17,10 @@ class NotificationMessage(models.Model):
 
 class NotificationRoute(models.Model):
     created_time = models.DateTimeField(_('created time'), auto_now_add=True)
-    bot = models.ForeignKey('telegram.TelegramBot', on_delete=models.PROTECT)
-    channel = models.ForeignKey('telegram.TelegramChannel', on_delete=models.PROTECT)
+    bot = models.ForeignKey('tel_tools.TelegramBot', on_delete=models.PROTECT)
+    channel = models.ForeignKey('tel_tools.TelegramChannel', on_delete=models.PROTECT)
     message = models.ForeignKey(NotificationMessage, on_delete=models.PROTECT)
-    is_enable = models.BooleanField(default=True)
+    is_enable = models.BooleanField(_('is enable'), default=True)
 
     class Meta:
         db_table = 'notifier_routes'

@@ -8,7 +8,7 @@ from django.conf import settings
 
 
 class Command(BaseCommand):
-    help = 'sign in to your telegram account'
+    help = 'sign in to your tel_tools account'
     print('example : 989356665544')
     try:
         os.remove('session.session')
