@@ -64,7 +64,7 @@ class Command(BaseCommand):
             dm_record.refresh_from_db()
 
             if dm_record.ip in checked_ip_list:
-                self.stdout.write(f"ALREADY CHECKED - {dm_record.ip}-->{dm_record.domain_full_name}")
+                self.stdout.write(f"ALREADY CHECKED - {dm_record.ip}-{dm_record.domain_full_name}")
                 continue
 
             ping_status = NetcatCheck(dm_record.ip, dm_record.server.port).is_ping or PingCheck(dm_record.ip).is_ping
@@ -80,10 +80,10 @@ class Command(BaseCommand):
             checked_ip_list.append(dm_record.ip)
 
             if ping_status:
-                self.stdout.write(f"PING OK - {dm_record.domain_full_name}:{dm_record.ip}")
+                self.stdout.write(f"PING OK - {dm_record.domain_full_name}-{dm_record.ip}")
                 continue
 
-            self.stdout.write(f"PING FAILED - {dm_record.domain_full_name}:{dm_record.ip}")
+            self.stdout.write(f"PING FAILED - {dm_record.domain_full_name}-{dm_record.ip}")
             ServerIPBank.objects.filter(ip=dm_record.ip).update(is_enable=False)
 
             ip_object = ServerIPBank.objects.filter(

@@ -34,7 +34,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='domainnamerecord',
             name='server',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT, to='dns_updater.Server'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='dns_updater.Server'),
         ),
         migrations.AddField(
             model_name='domainnamerecord',
