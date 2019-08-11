@@ -6,7 +6,7 @@ from .models import TelegramChannel, TelegramBot
 @admin.register(TelegramChannel)
 class TelegramChannelAdmin(admin.ModelAdmin):
     list_display = ['title', 'username', 'channel_id', 'created_time', 'updated_time']
-    search_fields = ['title', 'username']
+    search_fields = ['title', 'username', 'channel_id']
 
 
 @admin.register(TelegramBot)

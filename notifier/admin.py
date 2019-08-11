@@ -5,7 +5,7 @@ from .models import NotificationMessage, NotificationRoute
 
 class NotificationMessageInline(admin.TabularInline):
     model = NotificationRoute
-    extra = 0
+    extra = 1
 
 
 @admin.register(NotificationMessage)
