@@ -24,7 +24,6 @@ SECRET_KEY = '2-8n!d^qmck+c+o$+4&=_=o8p1gimu6c3j-ircfap008w*scsz'
 INSTALLED_APPS = [
     'dns_updater',
     'domain_check',
-    'promoter',
     'ping_logs',
     'notifier',
     'tel_tools',
