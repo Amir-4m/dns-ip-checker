@@ -85,11 +85,9 @@ class DomainNameRecordAdmin(admin.ModelAdmin):
         return False
 
     def get_urls(self):
-        urls = super().get_urls()
-        my_urls = [
+        return [
             path('bulk_change_ip/', self.admin_site.admin_view(bulk_change_ip_admin), name='bulk-change-ip'),
-        ]
-        return my_urls + urls
+        ] + super().get_urls()
 
 
 @admin.register(DNSUpdateLog)
