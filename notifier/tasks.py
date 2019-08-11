@@ -1,12 +1,9 @@
 # import os
 
-from django.conf import settings
-
 from celery import shared_task
 from telegram import Bot
 
 from .models import NotificationRoute
-
 
 # os.environ['https_proxy'] = ''  # settings.PROXY
 

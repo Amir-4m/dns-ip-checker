@@ -1,25 +1,17 @@
 import fcntl
-<<<<<<< HEAD
 
-import requests
-=======
 # import requests
->>>>>>> master
 
 from django.utils import timezone
 from django.core.management.base import BaseCommand
 
-<<<<<<< HEAD
-from dns_updater.models import DomainNameRecord, ServerIPBank, InternetServiceProvider
-from ping_logs.models import PingLog
-from utils.ping import PingCheck
-=======
+from notifier.tasks import send_notification
+
 from dns_updater.models import DomainNameRecord, ServerIPBank  # , InternetServiceProvider
 from ping_logs.models import PingLog
 
 from utils.network_tools import NetcatCheck, PingCheck
 
->>>>>>> master
 
 file_handle = None
 
@@ -55,53 +47,24 @@ class Command(BaseCommand):
         #     return
 
         # dm_record_list = DomainNameRecord.objects.filter(is_enable=True, network__in=[isp]).exclude(dns_record='')
-<<<<<<< HEAD
         dm_record_list = DomainNameRecord.objects.filter(is_enable=True).exclude(dns_record='')
-        changed_ip_list = []
-=======
-        dm_record_list = DomainNameRecord.objects.select_related('server').filter(is_enable=True).exclude(dns_record='')
         checked_ip_list = []
->>>>>>> master
 
         self.stdout.write(
             f" {timezone.now().strftime('%Y-%m-%d %H:%M:%S')} START TO PING DOMAINS ".center(120, "=")
         )
 
-<<<<<<< HEAD
-        my_network = requests.get('http://ip-api.com/json/').json().get('isp')  # Sepanta Wireless for me
-        #  filter newtrok if exists
-        network = InternetServiceProvider.objects.get(isp_name=my_network)  # for exmple
-=======
         # network = requests.get('http://ip-api.com/json/').json()
->>>>>>> master
+        # my_network = requests.get('http://ip-api.com/json/').json().get('isp')  # Sepanta Wireless for me
+        # #  filter newtrok if exists
+        # network = InternetServiceProvider.objects.get(isp_name=my_network)  # for exmple
 
         for dm_record in dm_record_list:
             self.stdout.write(f"PROCCESSING: {timezone.now().strftime('%Y-%m-%d %H:%M:%S')} {dm_record.domain_full_name}:{dm_record.ip}")
             dm_record.refresh_from_db()
-<<<<<<< HEAD
-            self.stdout.write(f"REFRESH: {timezone.now().strftime('%Y-%m-%d %H:%M:%S')} {dm_record.domain_full_name}:{dm_record.ip}")
-            ping = PingCheck(dm_record.ip)
-            self.stdout.write(f"PING: {timezone.now().strftime('%Y-%m-%d %H:%M:%S')} {dm_record.domain_full_name}:{dm_record.ip}")
-            PingLog.objects.create(
-                # TODO: get network name from network whois
-                # network_name=isp.isp_name,
-                # network=isp,
-                network_name='',
-                domain=dm_record.domain_full_name,
-                ip=ping.ip,
-                is_ping=ping.is_ping
-            )
-            self.stdout.write(
-                f"CREATE: {timezone.now().strftime('%Y-%m-%d %H:%M:%S')} {dm_record.domain_full_name}:{dm_record.ip}")
 
-            if dm_record.ip in changed_ip_list:
-                self.stdout.write(f"ALREADY CHANGED - {dm_record.domain_full_name}:{dm_record.ip}")
-                continue
-
-            if ping.is_ping:
-=======
             if dm_record.ip in checked_ip_list:
-                self.stdout.write(f"ALREADY CHECKED - {dm_record.ip}")
+                self.stdout.write(f"ALREADY CHECKED - {dm_record.ip}-->{dm_record.domain_full_name}")
                 continue
 
             ping_status = NetcatCheck(dm_record.ip, dm_record.server.port).is_ping or PingCheck(dm_record.ip).is_ping
@@ -117,7 +80,6 @@ class Command(BaseCommand):
             checked_ip_list.append(dm_record.ip)
 
             if ping_status:
->>>>>>> master
                 self.stdout.write(f"PING OK - {dm_record.domain_full_name}:{dm_record.ip}")
                 continue
 
@@ -130,6 +92,7 @@ class Command(BaseCommand):
                 server=dm_record.server
             ).first()
             if ip_object is None:
+                send_notification.delay('SERVER_IP_BANK_EMPTY')
                 self.stderr.write(f"NO IP IN BANK - {dm_record.domain_full_name}, {dm_record.server}")
                 continue
 
