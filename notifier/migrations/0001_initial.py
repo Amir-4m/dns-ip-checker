@@ -53,7 +53,7 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
-            name='TelegramNotifier',
+            name='NotificationRoute',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('is_enable', models.BooleanField()),

@@ -1,8 +1,11 @@
 # import os
+
 from django.conf import settings
+
 from celery import shared_task
 from telegram import Bot
-from .models import NotificationMessage
+
+from .models import NotificationRoute
 
 
 # os.environ['https_proxy'] = ''  # settings.PROXY
@@ -10,12 +13,8 @@ from .models import NotificationMessage
 
 @shared_task(queue='notifier')
 def send_notification(slug):
-    notifiers = NotificationMessage.objects.get(slug=slug).telegramnotifier_set.all()
+    notifiers = NotificationRoute.objects.select_related().filter(message__slug=slug, is_enable=True)
 
     for notifier in notifiers:
         bot = Bot(token=notifier.bot.token)
         bot.send_message(chat_id=notifier.channel.channel_id, text=notifier.message.template)
-    # token = getattr(settings, 'NOTIFIER_BOT_TOKEN', '')
-    # if not token:
-    #     return
-
