@@ -6,6 +6,15 @@ class MTProxyInline(admin.TabularInline):
     model = MTProxyStat
     extra = 0
 
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
 
 @admin.register(MTProxy)
 class MTProxyAdmin(admin.ModelAdmin):
