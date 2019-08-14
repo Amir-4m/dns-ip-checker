@@ -75,7 +75,8 @@ class Command(BaseCommand):
                 network_name='',
                 domain=dm_record.domain_full_name,
                 ip=dm_record.ip,
-                is_ping=ping_status
+                is_ping=ping_status,
+                description=dm_record.server.name,
             )
             checked_ip_list.append(dm_record.ip)
 
