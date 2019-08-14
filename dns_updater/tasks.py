@@ -42,7 +42,6 @@ def cloudflare_create(objc_id, domain, ip, zone_id):
         return
     else:
         logger.info(f"CREATE domain:{domain} ip:{ip}")
-        send_notification.delay('@dnslogs', f"CREATE domain: {domain} ip: {ip}")
 
     DNSUpdateLog.objects.create(
         ip=ip,
@@ -66,7 +65,6 @@ def cloudflare_edit(objc_id, domain, ip, dns_record, zone_id):
         return
     else:
         logger.info(f"EDIT domain: {domain} ip: {ip}")
-        send_notification.delay('@dnslogs', f"EDIT domain: {domain} ip: {ip}")
 
     DNSUpdateLog.objects.create(
         ip=ip,
@@ -90,7 +88,6 @@ def cloudflare_delete(objc_id, domain, ip, dns_record, zone_id):
         return
     else:
         logger.info(f"DELETE domain:{domain} ip:{ip}")
-        send_notification.delay('@dnslogs', f"DELETE domain: {domain} ip: {ip}")
 
     DNSUpdateLog.objects.create(
         ip=ip,

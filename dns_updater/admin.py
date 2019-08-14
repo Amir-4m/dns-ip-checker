@@ -45,7 +45,7 @@ class ImportExportServerIP(resources.ModelResource):
 
 @admin.register(Server)
 class ServerAdmin(admin.ModelAdmin):
-    list_display = ['name', 'ip', 'id', 'created_time', 'description']
+    list_display = ['name', 'ip', 'port']
     search_fields = ['name', 'ip']
 
 
