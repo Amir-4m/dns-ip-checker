@@ -27,3 +27,21 @@ class TelegramChannel(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class TelegramUser(models.Model):
+    created_time = models.DateTimeField(_('created time'), auto_now_add=True)
+    updated_time = models.DateTimeField(_('updated time'), auto_now=True)
+    username = models.CharField(_('username'), max_length=64, blank=True)
+    api_id = models.PositiveIntegerField(_('API ID'), unique=True)
+    api_hash = models.CharField(_('API Hash'), max_length=32)
+
+    class Meta:
+        db_table = 'telegram_users'
+
+    def __str__(self):
+        return self.username
+
+    # @property
+    # def session(self):
+    #     return 'sessio'

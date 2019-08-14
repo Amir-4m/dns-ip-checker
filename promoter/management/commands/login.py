@@ -1,5 +1,4 @@
 import os
-import socks
 
 from telethon.sync import TelegramClient
 

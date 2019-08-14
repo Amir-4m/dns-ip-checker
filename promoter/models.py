@@ -4,6 +4,7 @@ from dns_updater.models import Server
 
 class MTProxy(models.Model):
     created_time = models.DateTimeField(auto_now_add=True)
+    owner = models.ForeignKey('tel_tools.TelegramUser')
     host = models.CharField(max_length=50, db_index=True)
     port = models.IntegerField(db_index=True)
     secret_key = models.CharField(max_length=32)
