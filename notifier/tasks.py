@@ -23,7 +23,7 @@ def send_notification(slug, template_context=None):
     c = Context(template_context)
     text = t.render(c)
 
-    notifiers = message.objects.message_routes.select_related().filter(is_enable=True)
+    notifiers = message.message_routes.select_related().filter(is_enable=True)
 
     for notifier in notifiers:
         bot = Bot(token=notifier.bot.token)
