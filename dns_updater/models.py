@@ -4,11 +4,11 @@ from django.utils.translation import ugettext_lazy as _
 
 
 class Server(models.Model):
-    created_time = models.DateTimeField(auto_now_add=True)
-    updated_time = models.DateTimeField(auto_now=True)
-    name = models.CharField(max_length=50)
+    created_time = models.DateTimeField(_('created time'), auto_now_add=True)
+    updated_time = models.DateTimeField(_('updated time'), auto_now=True)
+    name = models.CharField(_('server name'), max_length=50)
     description = models.TextField(blank=True)
-    ssh_path_key = models.CharField(max_length=100, unique=True, null=True, blank=True)
+    ssh_path_key = models.CharField(max_length=100, blank=True)
     ip = models.CharField(_('server ip'), max_length=15, unique=True, validators=[validate_ipv4_address])
     port = models.PositiveSmallIntegerField(default=22)
 
@@ -21,8 +21,8 @@ class Server(models.Model):
 
 
 class ServerIPBank(models.Model):
-    created_time = models.DateTimeField(auto_now_add=True)
-    updated_time = models.DateTimeField(auto_now=True)
+    created_time = models.DateTimeField(_('created time'), auto_now_add=True)
+    updated_time = models.DateTimeField(_('updated time'), auto_now=True)
     last_check = models.DateTimeField(null=True)
     filter_time = models.DateTimeField(null=True)
     ip = models.CharField(max_length=15, unique=True)
@@ -54,6 +54,7 @@ class InternetServiceProvider(models.Model):
 
 
 class DomainZone(models.Model):
+    created_time = models.DateTimeField(_('created time'), auto_now_add=True)
     domain_name = models.CharField(max_length=50, unique=True)
     zone_id = models.CharField(max_length=32)
 
@@ -66,18 +67,17 @@ class DomainZone(models.Model):
 
 
 class DomainNameRecord(models.Model):
-    created_time = models.DateTimeField(auto_now_add=True)
-    updated_time = models.DateTimeField(auto_now=True)
+    created_time = models.DateTimeField(_('created time'), auto_now_add=True)
+    updated_time = models.DateTimeField(_('updated time'), auto_now=True)
     sub_domain_name = models.CharField(max_length=20)
     domain = models.ForeignKey(DomainZone, on_delete=models.PROTECT)
     ip = models.CharField(max_length=15, db_index=True)
     dns_record = models.CharField(max_length=32, blank=True, editable=False)
+    proxy_port = models.PositiveIntegerField(null=True, blank=True)
     server = models.ForeignKey(Server, on_delete=models.PROTECT)
     is_enable = models.BooleanField(default=True)
     start_time = models.TimeField(null=True)
     end_time = models.TimeField(null=True)
-
-    network = models.ManyToManyField(InternetServiceProvider, blank=True)
 
     class Meta:
         db_table = 'dns_domains_records'
@@ -106,13 +106,9 @@ class DomainNameRecord(models.Model):
     def domain_full_name(self):
         return f"{self.sub_domain_name}.{self.domain}"
 
-    @property
-    def networks(self):
-        return ",".join([n.isp_name for n in self.network.all()])
-
 
 class DNSUpdateLog(models.Model):
-    created_time = models.DateTimeField(auto_now_add=True)
+    created_time = models.DateTimeField(_('created time'), auto_now_add=True)
     ip = models.CharField(max_length=15, db_index=True)
     domain_record = models.ForeignKey(DomainNameRecord, on_delete=models.PROTECT)
     api_response = models.TextField()

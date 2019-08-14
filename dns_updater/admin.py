@@ -12,15 +12,11 @@ from django.urls import path
 
 def make_disable(modeladmin, request, queryset):
     queryset.update(is_enable=False)
-
-
 make_disable.short_description = _("Mark selected items as disable")
 
 
 def make_enable(modeladmin, request, queryset):
     queryset.update(is_enable=True)
-
-
 make_enable.short_description = _("Mark selected items as enable")
 
 
@@ -57,6 +53,7 @@ class ServerAdmin(admin.ModelAdmin):
 class ServerIPBankAdmin(ImportExportModelAdmin, admin.ModelAdmin):
     list_display = ['ip', 'used_time', 'server', 'created_time', 'updated_time', 'is_enable']
     list_filter = ['is_enable', IsUsedFilter, 'server']
+    search_fields = ['ip']
     actions = [make_disable, make_enable, 'make_unused']
     resource_class = ImportExportServerIP
 
@@ -73,8 +70,8 @@ class DomainZoneAdmin(admin.ModelAdmin):
 
 @admin.register(DomainNameRecord)
 class DomainNameRecordAdmin(admin.ModelAdmin):
-    list_display = ['sub_domain_name', 'domain', 'ip', 'networks', 'is_enable', 'updated_time', 'created_time']
-    list_editable = ['ip', 'is_enable']
+    list_display = ['domain_full_name', 'ip', 'proxy_port', 'is_enable', 'updated_time', 'start_time', 'end_time']
+    list_editable = ['ip', 'proxy_port', 'is_enable']
     list_filter = ['is_enable', 'domain', 'updated_time', 'server']
     search_fields = ['ip', 'sub_domain_name', 'dns_record', 'domain__domain_name', 'domain__zone_id']
     date_hierarchy = 'created_time'
