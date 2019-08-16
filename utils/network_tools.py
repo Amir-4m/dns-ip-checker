@@ -44,7 +44,7 @@ class NetcatCheck:
         self.nc(ip, port)
 
     def nc(self, ip, port):
-        cmd = f"netcat -v -z -w{settings.get('NETCAT_TIMEOUT', 5)} {ip} {port}"
+        cmd = f"netcat -v -z -w{getattr(settings, 'NETCAT_TIMEOUT', 5)} {ip} {port}"
         process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         res = str(process.stderr.read())
 

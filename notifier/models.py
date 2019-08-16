@@ -26,4 +26,4 @@ class NotificationRoute(models.Model):
         db_table = 'notifier_routes'
 
     def __str__(self):
-        return self.id
+        return f'route_{self.id}'

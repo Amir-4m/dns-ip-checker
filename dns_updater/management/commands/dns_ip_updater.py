@@ -1,6 +1,5 @@
 import fcntl
-
-# import requests
+import requests
 
 from django.utils import timezone
 from django.core.management.base import BaseCommand
@@ -29,9 +28,6 @@ def file_is_locked(file_path):
 class Command(BaseCommand):
     help = 'check domain ip and update if ping != 0'
 
-    # def add_arguments(self, parser):
-    #     parser.add_argument('isp', type=str, help='InternetServiceProvider slug field')
-
     def handle(self, *args, **kwargs):
         file_path = '/var/lock/dns_ip_updater'
 
@@ -39,14 +35,6 @@ class Command(BaseCommand):
             self.stderr.write(f"[{timezone.now().strftime('%Y-%m-%d %H:%M:%S')}] Skipped Procedure")
             return
 
-        # isp_name = kwargs['isp']
-        # try:
-        #     isp = InternetServiceProvider.objects.get(slug=isp_name)
-        # except Exception as e:
-        #     print(e, 'Please enter valid ISP name')
-        #     return
-
-        # dm_record_list = DomainNameRecord.objects.filter(is_enable=True, network__in=[isp]).exclude(dns_record='')
         dm_record_list = DomainNameRecord.objects.filter(is_enable=True).exclude(dns_record='')
         checked_ip_list = []
 
@@ -54,10 +42,15 @@ class Command(BaseCommand):
             f" {timezone.now().strftime('%Y-%m-%d %H:%M:%S')} START TO PING DOMAINS ".center(120, "=")
         )
 
-        # network = requests.get('http://ip-api.com/json/').json()
-        # my_network = requests.get('http://ip-api.com/json/').json().get('isp')  # Sepanta Wireless for me
-        # #  filter newtrok if exists
-        # network = InternetServiceProvider.objects.get(isp_name=my_network)  # for exmple
+        # Detect Network
+        network_name = ''
+        try:
+            r = requests.get('http://ip-api.com/json/')
+            r.raise_for_status()
+            r_json = r.json()
+            network_name = r_json.get('isp', '')
+        except Exception as e:
+            self.stderr.write(f"ISP NOT DETECTED, Error: {e}")
 
         for dm_record in dm_record_list:
             self.stdout.write(f"PROCCESSING: {timezone.now().strftime('%Y-%m-%d %H:%M:%S')} {dm_record.domain_full_name}:{dm_record.ip}")
@@ -69,10 +62,9 @@ class Command(BaseCommand):
 
             ping_status = NetcatCheck(dm_record.ip, dm_record.server.port).is_ping or PingCheck(dm_record.ip).is_ping
             PingLog.objects.create(
-                # TODO: get network name from network whois
-                # network_name=isp.isp_name,
+                # TODO: get isp for network
                 # network=isp,
-                network_name='',
+                network_name=network_name,
                 domain=dm_record.domain_full_name,
                 ip=dm_record.ip,
                 is_ping=ping_status
@@ -94,7 +86,7 @@ class Command(BaseCommand):
             if ip_object is None:
                 send_notification.delay(
                     'SERVER_IP_BANK_EMPTY',
-                    template_context=dict(domain=dm_record.domain_full_name, server=dm_record.server)
+                    template_context=dict(domain=dm_record.domain_full_name, server=dm_record.server.name)
                 )
                 self.stderr.write(f"NO IP IN BANK - {dm_record.domain_full_name}, {dm_record.server}")
                 continue
