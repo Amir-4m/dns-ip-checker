@@ -13,3 +13,5 @@ class TelegramChannelAdmin(admin.ModelAdmin):
 class TelegramBotAdmin(admin.ModelAdmin):
     list_display = ['name', 'created_time', 'updated_time']
     search_fields = ['name', 'token']
+
+

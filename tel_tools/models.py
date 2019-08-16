@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
+from django.conf import settings
 
 
 class TelegramBot(models.Model):
@@ -33,6 +34,7 @@ class TelegramUser(models.Model):
     created_time = models.DateTimeField(_('created time'), auto_now_add=True)
     updated_time = models.DateTimeField(_('updated time'), auto_now=True)
     username = models.CharField(_('username'), max_length=64, blank=True)
+    number = models.CharField(_('phone number'), max_length=13, unique=True)
     api_id = models.PositiveIntegerField(_('API ID'), unique=True)
     api_hash = models.CharField(_('API Hash'), max_length=32)
 
@@ -42,6 +44,6 @@ class TelegramUser(models.Model):
     def __str__(self):
         return self.username
 
-    # @property
-    # def session(self):
-    #     return 'sessio'
+    @property
+    def session(self):
+        return f"{settings.SESSION_DIR}/{self.api_id}.session"
