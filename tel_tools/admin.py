@@ -28,13 +28,13 @@ class TelegramUserAdmin(admin.ModelAdmin):
 
     def get_urls(self):
         return [
-                   path('confirm/', self.admin_site.admin_view(confirm_number), name='confirm'),
+                   path('confirm/<api_id>', self.admin_site.admin_view(confirm_number), name='confirm'),
                ] + super().get_urls()
 
     def response_add(self, request, obj, post_url_continue=None):
         if '_save' in request.POST or '_addanother' in request.POST:
             send_confirm_code.delay(obj.api_id, obj.api_hash, obj.number)
-            cache.set('user', (obj.api_id, obj.api_hash, obj.number))
-            return redirect('admin:confirm')
+            cache.set(f'user{obj.api_id}', (obj.api_id, obj.api_hash, obj.number))
+            return redirect('admin:confirm', obj.api_id)
 
         return super().response_add(request, obj, post_url_continue)
