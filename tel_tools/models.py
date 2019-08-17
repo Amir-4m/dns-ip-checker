@@ -37,6 +37,7 @@ class TelegramUser(models.Model):
     number = models.CharField(_('phone number'), max_length=13, unique=True)
     api_id = models.PositiveIntegerField(_('API ID'), unique=True)
     api_hash = models.CharField(_('API Hash'), max_length=32)
+    is_enable = models.BooleanField(_('is login'), default=False, editable=False)
 
     class Meta:
         db_table = 'telegram_users'

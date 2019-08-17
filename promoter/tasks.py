@@ -10,9 +10,7 @@ from telethon.tl.functions.messages import GetBotCallbackAnswerRequest
 from django.conf import settings
 
 from .models import MTProxy, MTProxyStat
-
-api_id = settings.TELEGRAM_API_ID
-api_hash = settings.TELEGRAM_API_HASH
+from tel_tools.models import TelegramUser
 
 proxy_server = settings.PROXY_HOST
 proxy_port = settings.PROXY_PORT
@@ -48,8 +46,8 @@ def find_proxy(client, host, page=None):
 
 
 @shared_task
-def new_proxy(host, port, secret_key):
-    with TelegramClient('session', api_id, api_hash) as client:
+def new_proxy(session, api_id, api_hash, host, port, secret_key):
+    with TelegramClient(session, api_id, api_hash) as client:
         try:
             client.send_message('MTProxybot', '/newproxy')
             sleep(1)
@@ -72,8 +70,8 @@ def new_proxy(host, port, secret_key):
 
 
 @shared_task
-def delete_proxy(host, port):
-    with TelegramClient('session', api_id, api_hash) as client:
+def delete_proxy(session, api_id, api_hash, host, port):
+    with TelegramClient(session, api_id, api_hash) as client:
         try:
             client.send_message('MTProxybot', '/myproxies')
             sleep(0.5)
@@ -101,9 +99,10 @@ def delete_proxy(host, port):
 
 
 @shared_task
-def set_promotion(host, port, channel):
+def set_promotion(owner, host, port, channel):
+    owner = TelegramUser.objects.get(pk=owner)
     try:
-        with TelegramClient('session', api_id, api_hash) as client:
+        with TelegramClient(owner.session, owner.api_id, owner.api_hash) as client:
             client.send_message('MTProxybot', '/myproxies')
             sleep(0.5)
 
@@ -129,9 +128,10 @@ def set_promotion(host, port, channel):
 
 
 @shared_task
-def remove_promotion(host, port):
+def remove_promotion(owner, host, port):
+    owner = TelegramUser.objects.get(pk=owner)
     try:
-        with TelegramClient('session', api_id, api_hash) as client:
+        with TelegramClient(owner.session, owner.api_id, owner.api_hash) as client:
             client.send_message('MTProxybot', '/myproxies')
             sleep(0.5)
             try:
@@ -154,13 +154,14 @@ def remove_promotion(host, port):
 @shared_task
 def get_proxies_stat(proxy_id):
     proxy = MTProxy.objects.get(id=proxy_id)
-    with TelegramClient('session', api_id, api_hash) as client:
+    with TelegramClient(proxy.owner.session, proxy.owner.api_id, proxy.owner.api_hash) as client:
         client.send_message('MTProxybot', '/myproxies')
-
+        sleep(0.5)
         try:
             to_id, msg_id, button_number = find_proxy(client, proxy.host)
         except Exception as e:
             print(e)
+            return
 
         client(GetBotCallbackAnswerRequest(
             to_id,

@@ -1,5 +1,6 @@
 from django import forms
+from django.utils.translation import ugettext_lazy as _
 
 
-class SubmitNumberForm(forms.Form):
-    login_code = forms.IntegerField(label='login code', max_length=5)
+class ConfirmUser(forms.Form):
+    code = forms.CharField(label=_('confirm code'), max_length=5)

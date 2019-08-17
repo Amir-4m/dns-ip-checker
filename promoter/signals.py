@@ -8,9 +8,11 @@ from .tasks import new_proxy, delete_proxy
 @receiver(post_save, sender=MTProxy)
 def create_mtproxy(sender, instance, created, **kwargs):
     if created:
-        new_proxy.delay(instance.host, instance.port, instance.secret_key)
+        new_proxy.delay(instance.owner.session, instance.owner.api_id, instance.owner.api_hash, instance.host,
+                        instance.port, instance.secret_key)
 
 
 @receiver(post_delete, sender=MTProxy)
 def delete_mtproxy(sender, instance, **kwargs):
-    delete_proxy.delay(instance.host, instance.port)
+    delete_proxy.delay(instance.owner.session, instance.owner.api_id, instance.owner.api_hash, instance.host,
+                       instance.port)
