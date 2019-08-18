@@ -15,8 +15,7 @@ from tel_tools.models import TelegramUser
 proxy_server = settings.PROXY_HOST
 proxy_port = settings.PROXY_PORT
 
-promotion_logger = logging.getLogger('channel_promotion')
-stat_logger = logging.getLogger('proxy_stat')
+logger = logging.getLogger('promoter')
 
 
 def find_proxy(client, host, page=None):
@@ -47,8 +46,8 @@ def find_proxy(client, host, page=None):
 
 @shared_task
 def new_proxy(session, api_id, api_hash, host, port, secret_key):
-    with TelegramClient(session, api_id, api_hash) as client:
-        try:
+    try:
+        with TelegramClient(session, api_id, api_hash) as client:
             client.send_message('MTProxybot', '/newproxy')
             sleep(1)
             client.send_message('MTProxybot', f"{host}:{port}")
@@ -63,23 +62,20 @@ def new_proxy(session, api_id, api_hash, host, port, secret_key):
                 port=port
             ).update(proxy_tag=proxy_tag)
 
-            promotion_logger.info(f"{host}:{port} CREATED, PROXY_TAG: {proxy_tag}.")
+            logger.info(f"{host}:{port} CREATED, PROXY_TAG: {proxy_tag}.")
 
-        except Exception as e:
-            promotion_logger.error(f"{host}:{port} NOT CREATED, ERROR: {e}.")
+    except Exception as e:
+        logger.error(f"{host}:{port} NOT CREATED, ERROR: {e}.")
 
 
 @shared_task
 def delete_proxy(session, api_id, api_hash, host, port):
-    with TelegramClient(session, api_id, api_hash) as client:
-        try:
+    try:
+        with TelegramClient(session, api_id, api_hash) as client:
             client.send_message('MTProxybot', '/myproxies')
             sleep(0.5)
 
-            try:
-                to_id, msg_id, button_number = find_proxy(client, host)
-            except Exception as e:
-                print(e)
+            to_id, msg_id, button_number = find_proxy(client, host)
 
             client(GetBotCallbackAnswerRequest(
                 to_id,
@@ -93,9 +89,9 @@ def delete_proxy(session, api_id, api_hash, host, port):
                 data=bytes(f"proxies/{button_number}/delete/confirm", 'utf-8'),
             ))
 
-            promotion_logger.info(f"{host}:{port} DELETED.")
-        except Exception as e:
-            promotion_logger.error(f"{host}:{port} NOT DELETED, ERROR: {e}.")
+            logger.info(f"{host}:{port} DELETED.")
+    except Exception as e:
+        logger.error(f"{host}:{port} NOT DELETED, ERROR: {e}.")
 
 
 @shared_task
@@ -106,10 +102,7 @@ def set_promotion(owner, host, port, channel):
             client.send_message('MTProxybot', '/myproxies')
             sleep(0.5)
 
-            try:
-                to_id, msg_id, button_number = find_proxy(client, host)
-            except Exception as e:
-                print(e)
+            to_id, msg_id, button_number = find_proxy(client, host)
 
             client(GetBotCallbackAnswerRequest(
                 to_id,
@@ -119,11 +112,10 @@ def set_promotion(owner, host, port, channel):
 
             client.send_message('MTProxybot', channel)
 
-            promotion_logger.info(
-                f"{host}:{port} SET FOR {channel}.")
+            logger.info(f"{host}:{port} SET FOR {channel}.")
 
     except Exception as e:
-        promotion_logger.error(
+        logger.error(
             f"{host}:{port} NOT SET FOR {channel}\n{e}.")
 
 
@@ -134,10 +126,8 @@ def remove_promotion(owner, host, port):
         with TelegramClient(owner.session, owner.api_id, owner.api_hash) as client:
             client.send_message('MTProxybot', '/myproxies')
             sleep(0.5)
-            try:
-                to_id, msg_id, button_number = find_proxy(client, host)
-            except Exception as e:
-                print(e)
+
+            to_id, msg_id, button_number = find_proxy(client, host)
 
             client(GetBotCallbackAnswerRequest(
                 to_id,
@@ -145,47 +135,45 @@ def remove_promotion(owner, host, port):
                 data=bytes(f"proxies/{button_number}/edit/promo/none", 'utf-8'),
             ))
 
-            promotion_logger.info(f"{host}:{port} REMOVED PROMOTION.")
+            logger.info(f"{host}:{port} REMOVED PROMOTION.")
 
     except Exception as e:
-        promotion_logger.error(f"{host}:{port} COULD NOT REMOVE PROMOTION, ERROR: {e}.")
+        logger.error(f"{host}:{port} CAN NOT REMOVE PROMOTION, ERROR: {e}.")
 
 
 @shared_task
 def get_proxies_stat(proxy_id):
     proxy = MTProxy.objects.get(id=proxy_id)
-    with TelegramClient(proxy.owner.session, proxy.owner.api_id, proxy.owner.api_hash) as client:
-        client.send_message('MTProxybot', '/myproxies')
-        sleep(0.5)
-        try:
+    try:
+        with TelegramClient(proxy.owner.session, proxy.owner.api_id, proxy.owner.api_hash) as client:
+            client.send_message('MTProxybot', '/myproxies')
+            sleep(0.5)
+
             to_id, msg_id, button_number = find_proxy(client, proxy.host)
-        except Exception as e:
-            print(e)
-            return
 
-        client(GetBotCallbackAnswerRequest(
-            to_id,
-            msg_id,
-            data=bytes(f"proxies/{button_number}/stats", 'utf-8'),
-        ))
+            client(GetBotCallbackAnswerRequest(
+                to_id,
+                msg_id,
+                data=bytes(f"proxies/{button_number}/stats", 'utf-8'),
+            ))
+            stat_text = client.get_messages('MTProxybot')[0].message
 
-        stat_text = client.get_messages('MTProxybot')[0].message
-
-        try:
             stat = stat_text.split('\n')[11][11:]
             stat_number = re.findall(r'[ 0-9]+', stat)[0].replace(" ", "")
             stat_message = stat_text
             number_of_users = int(stat_number)
-            stat_logger.info(f"{proxy.host} ---- STAT: {stat}")
-        except Exception as e:
-            stat_message = "Sorry, we don't have stats for your proxy yet. Please come back later."
-            number_of_users = None
-            stat_logger.error(
-                f"{proxy.host} ---- STAT: Sorry, we don't have stats for your proxy yet. Please come back later."
-                f"\n{e}")
+            logger.info(f"{proxy.host} ---- STAT: {stat}")
 
-        MTProxyStat.objects.create(
-            proxy=proxy,
-            stat_message=stat_message,
-            number_of_users=number_of_users,
-        )
+    except IndexError:
+        stat_message = stat_text
+        number_of_users = None
+        logger.error(f"{proxy.host} ---- STAT: {stat_text}")
+    except Exception as e:
+        print(e)
+        return
+
+    MTProxyStat.objects.create(
+        proxy=proxy,
+        stat_message=stat_message,
+        number_of_users=number_of_users,
+    )

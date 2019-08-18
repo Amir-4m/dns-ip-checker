@@ -18,7 +18,6 @@ from .local_settings import *
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SESSION_DIR = os.path.join(BASE_DIR, "tel_tools/sessions/")
 
-
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = '2-8n!d^qmck+c+o$+4&=_=o8p1gimu6c3j-ircfap008w*scsz'
 
@@ -170,6 +169,10 @@ LOGGING = ({
         'dns_updater': {
             'level': 'DEBUG',
             'handlers': ['file']
+        },
+        'promoter': {
+            'level': 'DEBUG',
+            'handlers': ['console', 'file']
         },
     }
 })

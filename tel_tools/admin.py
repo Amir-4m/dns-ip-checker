@@ -1,13 +1,11 @@
 from django.contrib import admin
 from django.urls import path
-from django.shortcuts import render, redirect, reverse
-from django.template.response import TemplateResponse
+from django.shortcuts import redirect
 from django.core.cache import cache
 
 from .models import TelegramChannel, TelegramBot, TelegramUser
 from .views import confirm_number
 from .tasks import send_confirm_code
-from .forms import ConfirmUser
 
 
 @admin.register(TelegramChannel)
@@ -24,7 +22,7 @@ class TelegramBotAdmin(admin.ModelAdmin):
 
 @admin.register(TelegramUser)
 class TelegramUserAdmin(admin.ModelAdmin):
-    list_display = ['id', 'number', 'username', 'api_id', 'api_hash', 'created_time', 'is_enable']
+    list_display = ['number', 'id', 'username', 'api_id', 'api_hash', 'created_time', 'is_enable']
 
     def get_urls(self):
         return [

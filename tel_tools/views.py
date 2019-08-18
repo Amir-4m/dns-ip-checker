@@ -19,8 +19,7 @@ def confirm_number(request, api_id):
                 code = data.get('code')
                 api_id, api_hash, number = cache.get(f'user{api_id}')
                 login.delay(api_id, api_hash, number, code)
-                messages.info(request,
-                              _('your information submitted please check your saved message and reload the page'))
+                messages.info(request, _('please check your saved message and reload the page'))
                 return redirect('admin:tel_tools_telegramuser_changelist')
 
         return TemplateResponse(request, 'admin/tel_tools/telegramuser/confirm.html', {'form': form})
