@@ -16,7 +16,7 @@ from .local_settings import *
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SESSION_DIR = os.path.join(BASE_DIR, "tel_tools/sessions/")
+TELEGRAM_SESSION_DIR = os.path.join(BASE_DIR, "tel_tools/sessions/")
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = '2-8n!d^qmck+c+o$+4&=_=o8p1gimu6c3j-ircfap008w*scsz'

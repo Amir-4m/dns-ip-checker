@@ -47,4 +47,4 @@ class TelegramUser(models.Model):
 
     @property
     def session(self):
-        return f"{settings.SESSION_DIR}/{self.api_id}.session"
+        return f"{settings.TELEGRAM_SESSION_DIR}/{self.api_id}.session"
