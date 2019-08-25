@@ -169,7 +169,7 @@ def get_proxies_stat(proxy_id):
         number_of_users = None
         logger.error(f"{proxy.host} ---- STAT: {stat_text}")
     except Exception as e:
-        print(e)
+        logger.error(f"{proxy.host} ---- ERROR: {e}")
         return
 
     MTProxyStat.objects.create(
