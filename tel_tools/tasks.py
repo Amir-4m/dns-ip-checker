@@ -36,9 +36,12 @@ def login(api_id, api_hash, number, code):
         client.send_message('me', _('django admin panel enabled for this number'))
         client.disconnect()
         logger.info(_(f"SIGN IN TO {number} SUCCESS"))
+
+        TelegramUser.objects.filter(
+            api_id=api_id,
+        ).update(is_enable=True)
+
     except Exception as e:
         logger.error(_(f"SIGN IN TO {number} FAILED\n{e}"))
 
-    TelegramUser.objects.filter(
-        api_id=api_id,
-    ).update(is_enable=True)
+
