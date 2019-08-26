@@ -11,7 +11,6 @@ from notifier.tasks import send_notification
 
 
 class NotifierApiView(APIView):
-
     def post(self, request):
         slug = request.POST.get('slug')
         template = request.POST.get('template')
@@ -19,8 +18,7 @@ class NotifierApiView(APIView):
 
         try:
             message = NotificationMessage.objects.get(slug=slug)
+            send_notification.delay(slug=message.slug, template_context=dict_template)
+            return Response(status=status.HTTP_200_OK)
         except ObjectDoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
-
-        send_notification.delay(slug=message.slug, template_context=dict_template)
-        return Response(status=status.HTTP_200_OK)
