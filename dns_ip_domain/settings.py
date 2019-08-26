@@ -30,6 +30,7 @@ INSTALLED_APPS = [
 
     'import_export',
     'django_celery_beat',
+    'rest_framework',
 
     'django.contrib.admin',
     'django.contrib.auth',
@@ -94,7 +95,7 @@ CACHES = {
     'default': {
         'BACKEND': CACHE_BACKEND,
         'LOCATION': CACHE_HOST,
-        'KEY_PREFIX': 'VAS_PAYMENT'
+        'KEY_PREFIX': 'VAS_PAYMENT'  # Todo change key_prefix
     },
 }
 
