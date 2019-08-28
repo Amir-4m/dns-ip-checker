@@ -1,6 +1,8 @@
 import fcntl
 import requests
 
+from datetime import datetime
+
 from django.utils import timezone
 from django.core.management.base import BaseCommand
 
@@ -32,14 +34,14 @@ class Command(BaseCommand):
         file_path = '/var/lock/dns_ip_updater'
 
         if file_is_locked(file_path):
-            self.stderr.write(f"[{timezone.now().strftime('%Y-%m-%d %H:%M:%S')}] Skipped Procedure")
+            self.stderr.write(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Skipped Procedure")
             return
 
         dm_record_list = DomainNameRecord.objects.filter(is_enable=True).exclude(dns_record='')
         checked_ip_list = []
 
         self.stdout.write(
-            f" {timezone.now().strftime('%Y-%m-%d %H:%M:%S')} START TO PING DOMAINS ".center(120, "=")
+            f" {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} START TO PING DOMAINS ".center(120, "=")
         )
 
         # Detect Network
@@ -53,7 +55,7 @@ class Command(BaseCommand):
             self.stderr.write(f"ISP NOT DETECTED, Error: {e}")
 
         for dm_record in dm_record_list:
-            self.stdout.write(f"PROCCESSING: {timezone.now().strftime('%Y-%m-%d %H:%M:%S')} {dm_record.domain_full_name}:{dm_record.ip}")
+            self.stdout.write(f"PROCCESSING: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} {dm_record.domain_full_name}:{dm_record.ip}")
             dm_record.refresh_from_db()
 
             if dm_record.ip in checked_ip_list:
@@ -77,27 +79,27 @@ class Command(BaseCommand):
                 continue
 
             self.stdout.write(f"PING FAILED - {dm_record.domain_full_name}-{dm_record.ip}")
-            ServerIPBank.objects.filter(ip=dm_record.ip).update(
-                is_enable=False,
-                filter_time=timezone.now(),
-                last_check_time=timezone.now()
-            )
 
-            ip_object = ServerIPBank.objects.filter(
-                used_time__isnull=True,
-                is_enable=True,
-                server=dm_record.server
-            ).first()
-            if ip_object is None:
-                send_notification.delay(
-                    'SERVER_IP_BANK_EMPTY',
-                    template_context=dict(domain=dm_record.domain_full_name, server=dm_record.server.name)
-                )
-                self.stderr.write(f"NO IP IN BANK - {dm_record.domain_full_name}, {dm_record.server}")
-                continue
-
-            current_time = timezone.now().time()
+            current_time = datetime.now().time()
             if dm_record.start_time <= current_time or current_time <= dm_record.end_time:
+                ServerIPBank.objects.filter(ip=dm_record.ip).update(
+                    is_enable=False,
+                    filter_time=timezone.now(),
+                    last_check_time=timezone.now()
+                )
+                ip_object = ServerIPBank.objects.filter(
+                    used_time__isnull=True,
+                    is_enable=True,
+                    server=dm_record.server
+                ).first()
+                if ip_object is None:
+                    send_notification.delay(
+                        'SERVER_IP_BANK_EMPTY',
+                        template_context=dict(domain=dm_record.domain_full_name, server=dm_record.server.name)
+                    )
+                    self.stderr.write(f"NO IP IN BANK - {dm_record.domain_full_name}, {dm_record.server}")
+                    continue
+
                 for dm in DomainNameRecord.objects.filter(ip=dm_record.ip):
                     dm.ip = ip_object.ip
                     dm.save()
