@@ -5,17 +5,16 @@ from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
 
 from notifier.tasks import send_notification
+from .serializers import NotifierSerializer
 
 
 class NotifierApiView(APIView):
 
     def post(self, request):
-        slug = request.POST.get('slug')
-        template = request.POST.get('template')
-        dict_template = json.loads(template)
+        serializer = NotifierSerializer(request.POST).data
 
         try:
-            send_notification.delay(slug=slug, template_context=dict_template)
+            send_notification.delay(serializer.get('slug'), serializer.get('template'))
         except Exception as e:
             raise ValidationError(dict(sent=False, error=str(e)))
 
