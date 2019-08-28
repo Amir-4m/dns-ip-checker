@@ -3,6 +3,17 @@ from notifier.models import NotificationMessage, NotificationRoute
 from tel_tools.models import TelegramBot, TelegramChannel
 
 
+class NotifierSerializer(serializers.Serializer):
+    slug = serializers.SlugField()
+    template = serializers.JSONField()
+
+    def update(self, instance, validated_data):
+        pass
+
+    def create(self, validated_data):
+        pass
+
+
 class TelegramBotSerializer(serializers.ModelSerializer):
     class Meta:
         model = TelegramBot
