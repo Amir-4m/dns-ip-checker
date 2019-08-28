@@ -76,7 +76,11 @@ class Command(BaseCommand):
                 continue
 
             self.stdout.write(f"PING FAILED - {dm_record.domain_full_name}-{dm_record.ip}")
-            ServerIPBank.objects.filter(ip=dm_record.ip).update(is_enable=False)
+            ServerIPBank.objects.filter(ip=dm_record.ip).update(
+                is_enable=False,
+                filter_time=timezone.now(),
+                last_check_time=timezone.now()
+            )
 
             ip_object = ServerIPBank.objects.filter(
                 used_time__isnull=True,
