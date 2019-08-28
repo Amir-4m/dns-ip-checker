@@ -8,7 +8,7 @@ class PingLog(models.Model):
     domain = models.CharField(max_length=50, db_index=True, blank=True)
     ip = models.CharField(max_length=15, db_index=True, blank=True)
     is_ping = models.BooleanField('was pinged?')
-    description = models.TextField()
+    description = models.TextField(blank=True)
 
     class Meta:
         db_table = 'ping_log'
