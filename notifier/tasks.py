@@ -17,6 +17,7 @@ def send_notification(slug, template_context=None):
     try:
         message = NotificationMessage.objects.get(slug=slug)
     except NotificationMessage.DoesNotExist:
+        logging.warning(f'slug {slug} not found')
         return
 
     if not isinstance(template_context, dict):
@@ -34,4 +35,4 @@ def send_notification(slug, template_context=None):
             channel_id = notifier.channel.channel_id or notifier.channel.username
             bot.send_message(chat_id=channel_id, text=text)
         except error.TelegramError as te:
-            pass
+            logging.error(f'telegram error: {te}')
