@@ -17,6 +17,7 @@ from django.urls import path, include
 from django.contrib import admin
 
 urlpatterns = [
+    path('api/', include('api.urls')),
+
     path('admin65E7910/', admin.site.urls),
-    path('api/notifier/', include("notifier.api.urls")),
 ]

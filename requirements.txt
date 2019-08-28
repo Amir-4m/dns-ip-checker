@@ -4,13 +4,10 @@ mysqlclient
 requests
 python-memcached
 
+djangorestframework >= 3.10, < 3.11
 celery >= 4.3, < 4.4
 django_celery_beat == 1.5.0
 django-import-export == 1.2.0
 
 python-telegram-bot == 11.1.0
 telethon == 1.9.0
-djangorestframework
-markdown
-django-filter
-
