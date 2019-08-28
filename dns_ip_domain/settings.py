@@ -16,6 +16,7 @@ from .local_settings import *
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+TELEGRAM_SESSION_DIR = os.path.join(BASE_DIR, "tel_tools/sessions/")
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = '2-8n!d^qmck+c+o$+4&=_=o8p1gimu6c3j-ircfap008w*scsz'
@@ -27,6 +28,7 @@ INSTALLED_APPS = [
     'ping_logs',
     'tel_tools',
     'notifier',
+    'promoter',
 
     'import_export',
     'django_celery_beat',
@@ -177,6 +179,10 @@ LOGGING = ({
         'dns_updater': {
             'level': 'DEBUG',
             'handlers': ['file']
+        },
+        'promoter': {
+            'level': 'DEBUG',
+            'handlers': ['console', 'file']
         },
     }
 })
