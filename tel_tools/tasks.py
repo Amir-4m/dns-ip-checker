@@ -8,7 +8,7 @@ from django.utils.translation import ugettext_lazy as _
 from telethon.sync import TelegramClient
 from .models import TelegramUser
 
-logger = logging.getLogger('promoter')
+logger = logging.getLogger(__name__)
 
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))

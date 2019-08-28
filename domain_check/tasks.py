@@ -8,7 +8,8 @@ from ping_logs.models import PingLog
 from utils.ping import PingCheck
 from dns_updater.models import InternetServiceProvider
 
-logger = logging.getLogger('dns_updater')
+
+logger = logging.getLogger(__name__)
 
 
 @shared_task

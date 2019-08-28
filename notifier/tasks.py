@@ -9,7 +9,7 @@ from telegram import Bot, error
 from .models import NotificationMessage
 
 # os.environ['https_proxy'] = ''  # settings.PROXY
-logger = logging.getLogger('notifier')
+logger = logging.getLogger(__name__)
 
 
 @shared_task(queue='notifier')

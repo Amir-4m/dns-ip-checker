@@ -9,8 +9,7 @@ from telethon.tl.functions.messages import GetBotCallbackAnswerRequest
 from .models import MTProxy, MTProxyStat
 from tel_tools.models import TelegramUser
 
-
-logger = logging.getLogger('promoter')
+logger = logging.getLogger(__name__)
 
 
 def find_proxy(client, host, page=None):

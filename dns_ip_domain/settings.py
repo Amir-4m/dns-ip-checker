@@ -184,6 +184,14 @@ LOGGING = ({
             'level': 'DEBUG',
             'handlers': ['console', 'file']
         },
+        'notifier': {
+            'level': 'DEBUG',
+            'handlers': ['console', 'file']
+        },
+        'tel_tools': {
+            'level': 'DEBUG',
+            'handlers': ['console', 'file']
+        },
     }
 })
 
