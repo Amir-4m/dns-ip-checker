@@ -52,12 +52,12 @@ def new_proxy(session, api_id, api_hash, host, port, secret_key):
             bot_response = client.get_messages('MTProxybot')[0]
             proxy_tag = bot_response.message.split('\n')[1].split(':')[1].rstrip('.').strip()
 
+            logger.info(f"{host}:{port} CREATED, PROXY_TAG: {proxy_tag}.")
+
             MTProxy.objects.filter(
                 host=host,
                 port=port
             ).update(proxy_tag=proxy_tag)
-
-            logger.info(f"{host}:{port} CREATED, PROXY_TAG: {proxy_tag}.")
 
     except Exception as e:
         logger.error(f"{host}:{port} NOT CREATED, ERROR: {e}.")
@@ -139,6 +139,8 @@ def remove_promotion(owner, host, port):
 @shared_task(queue='telegram')
 def get_proxies_stat(proxy_id):
     proxy = MTProxy.objects.get(id=proxy_id)
+    stat_text = ''
+    number_of_users = None
     try:
         with TelegramClient(proxy.owner.session, proxy.owner.api_id, proxy.owner.api_hash) as client:
             client.send_message('MTProxybot', '/myproxies')
@@ -153,15 +155,11 @@ def get_proxies_stat(proxy_id):
             ))
             stat_text = client.get_messages('MTProxybot')[0].message
 
-            stat = stat_text.split('\n')[11][11:]
-            stat_number = re.findall(r'[ 0-9]+', stat)[0].replace(" ", "")
-            stat_message = stat_text
-            number_of_users = int(stat_number)
+            stat = (stat_text.split('\n')[11][11:]).replace(" ", "")
             logger.info(f"{proxy.host} ---- STAT: {stat}")
+            number_of_users = int(stat)
 
     except IndexError:
-        stat_message = stat_text
-        number_of_users = None
         logger.error(f"{proxy.host} ---- STAT: {stat_text}")
     except Exception as e:
         logger.error(f"{proxy.host} ---- ERROR: {e}")
@@ -169,6 +167,6 @@ def get_proxies_stat(proxy_id):
 
     MTProxyStat.objects.create(
         proxy=proxy,
-        stat_message=stat_message,
+        stat_message=stat_text,
         number_of_users=number_of_users,
     )
