@@ -5,7 +5,7 @@ from django.utils.translation import ugettext_lazy as _
 class TelegramBot(models.Model):
     created_time = models.DateTimeField(_('created time'), auto_now_add=True)
     updated_time = models.DateTimeField(_('updated time'), auto_now=True)
-    name = models.CharField(_('bot name'), max_length=60)
+    name = models.CharField(_('bot name'), max_length=50)
     token = models.CharField(_('token'), max_length=45, unique=True)
 
     class Meta:
@@ -18,9 +18,9 @@ class TelegramBot(models.Model):
 class TelegramChannel(models.Model):
     created_time = models.DateTimeField(_('created time'), auto_now_add=True)
     updated_time = models.DateTimeField(_('updated time'), auto_now=True)
-    title = models.CharField(_('channel title'), max_length=60)
-    channel_id = models.BigIntegerField(_('channel id'), unique=True)
-    username = models.CharField(_('username'), max_length=60)
+    title = models.CharField(_('channel title'), max_length=50)
+    channel_id = models.BigIntegerField(_('channel id'), unique=True, null=True, blank=True)
+    username = models.CharField(_('username'), max_length=30, blank=True)
 
     class Meta:
         db_table = 'telegram_channels'

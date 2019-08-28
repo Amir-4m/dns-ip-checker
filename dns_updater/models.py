@@ -28,8 +28,7 @@ class ServerIPBank(models.Model):
     used_time = models.DateTimeField(null=True, editable=False)
     expire_time = models.DateTimeField(null=True, blank=True)
     is_enable = models.BooleanField(default=True)
-    is_set = models.BooleanField(default=False, editable=False)
-    last_check = models.DateTimeField(null=True, editable=False)
+    last_check_time = models.DateTimeField(null=True, editable=False)
     filter_time = models.DateTimeField(null=True, editable=False)
 
     class Meta:
