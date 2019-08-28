@@ -38,7 +38,7 @@ def find_proxy(client, host, page=None):
                 return find_proxy(client, host, page=button.data)
 
 
-@shared_task
+@shared_task(queue='telegram')
 def new_proxy(session, api_id, api_hash, host, port, secret_key):
     try:
         with TelegramClient(session, api_id, api_hash) as client:
@@ -62,7 +62,7 @@ def new_proxy(session, api_id, api_hash, host, port, secret_key):
         logger.error(f"{host}:{port} NOT CREATED, ERROR: {e}.")
 
 
-@shared_task
+@shared_task(queue='telegram')
 def delete_proxy(session, api_id, api_hash, host, port):
     try:
         with TelegramClient(session, api_id, api_hash) as client:
@@ -88,7 +88,7 @@ def delete_proxy(session, api_id, api_hash, host, port):
         logger.error(f"{host}:{port} NOT DELETED, ERROR: {e}.")
 
 
-@shared_task
+@shared_task(queue='telegram')
 def set_promotion(owner, host, port, channel):
     owner = TelegramUser.objects.get(pk=owner)
     try:
@@ -113,7 +113,7 @@ def set_promotion(owner, host, port, channel):
             f"{host}:{port} NOT SET FOR {channel}\n{e}.")
 
 
-@shared_task
+@shared_task(queue='telegram')
 def remove_promotion(owner, host, port):
     owner = TelegramUser.objects.get(pk=owner)
     try:
@@ -135,7 +135,7 @@ def remove_promotion(owner, host, port):
         logger.error(f"{host}:{port} CAN NOT REMOVE PROMOTION, ERROR: {e}.")
 
 
-@shared_task
+@shared_task(queue='telegram')
 def get_proxies_stat(proxy_id):
     proxy = MTProxy.objects.get(id=proxy_id)
     try:

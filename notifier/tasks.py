@@ -12,7 +12,7 @@ from .models import NotificationMessage
 logger = logging.getLogger(__name__)
 
 
-@shared_task(queue='notifier')
+@shared_task(queue='telegram')
 def send_notification(slug, template_context=None):
     try:
         message = NotificationMessage.objects.get(slug=slug)

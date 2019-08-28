@@ -15,7 +15,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 TELEGRAM_SESSION_DIR = os.path.join(BASE_DIR, "telethon_sessions/")
 
 
-@shared_task
+@shared_task(queue='telegram')
 def send_confirm_code(api_id, api_hash, number):
     try:
         session = f"{TELEGRAM_SESSION_DIR}/{api_id}.session"
@@ -29,7 +29,7 @@ def send_confirm_code(api_id, api_hash, number):
         logger.error(_(f"LOGIN CODE NOT SENT FOR {number}\n{e}"))
 
 
-@shared_task
+@shared_task(queue='telegram')
 def login(api_id, api_hash, number, code):
     try:
         session = f"{TELEGRAM_SESSION_DIR}/{api_id}.session"
