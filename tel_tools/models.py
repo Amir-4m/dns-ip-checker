@@ -1,6 +1,10 @@
+import os
+
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
-from django.conf import settings
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+TELEGRAM_SESSION_DIR = os.path.join(BASE_DIR, "telethon_sessions/")
 
 
 class TelegramBot(models.Model):
@@ -47,4 +51,4 @@ class TelegramUser(models.Model):
 
     @property
     def session(self):
-        return f"{settings.TELEGRAM_SESSION_DIR}/{self.api_id}.session"
+        return f"{TELEGRAM_SESSION_DIR}/{self.api_id}.session"

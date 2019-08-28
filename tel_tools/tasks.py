@@ -6,13 +6,9 @@ from django.core.cache import cache
 from django.utils.translation import ugettext_lazy as _
 
 from telethon.sync import TelegramClient
-from .models import TelegramUser
+from .models import TelegramUser, TELEGRAM_SESSION_DIR
 
 logger = logging.getLogger(__name__)
-
-
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-TELEGRAM_SESSION_DIR = os.path.join(BASE_DIR, "telethon_sessions/")
 
 
 @shared_task(queue='telegram')
