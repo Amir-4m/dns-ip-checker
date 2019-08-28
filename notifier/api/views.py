@@ -1,5 +1,3 @@
-import json
-
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
@@ -11,10 +9,11 @@ from .serializers import NotifierSerializer
 class NotifierApiView(APIView):
 
     def post(self, request):
-        serializer = NotifierSerializer(request.POST).data
+        serializer = NotifierSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
         try:
-            send_notification.delay(serializer.get('slug'), serializer.get('template'))
+            send_notification.delay(serializer.validated_data['slug'], serializer.validated_data['template'])
         except Exception as e:
             raise ValidationError(dict(sent=False, error=str(e)))
 

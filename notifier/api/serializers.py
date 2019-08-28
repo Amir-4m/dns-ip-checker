@@ -13,9 +13,6 @@ class NotifierSerializer(serializers.Serializer):
     def create(self, validated_data):
         pass
 
-    def save(self, **kwargs):
-        pass
-
 
 class TelegramBotSerializer(serializers.ModelSerializer):
     class Meta:
