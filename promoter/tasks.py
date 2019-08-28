@@ -2,18 +2,13 @@ import logging
 import re
 from time import sleep
 
-import socks
 from celery import shared_task
 from telethon.sync import TelegramClient
 from telethon.tl.functions.messages import GetBotCallbackAnswerRequest
 
-from django.conf import settings
-
 from .models import MTProxy, MTProxyStat
 from tel_tools.models import TelegramUser
 
-proxy_server = settings.PROXY_HOST
-proxy_port = settings.PROXY_PORT
 
 logger = logging.getLogger('promoter')
 

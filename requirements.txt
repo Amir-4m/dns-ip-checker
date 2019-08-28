@@ -10,4 +10,3 @@ django-import-export == 1.2.0
 
 python-telegram-bot == 11.1.0
 telethon == 1.9.0
-django-redis
