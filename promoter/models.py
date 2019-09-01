@@ -9,6 +9,7 @@ class MTProxy(models.Model):
     port = models.IntegerField(db_index=True)
     secret_key = models.CharField(max_length=32)
     proxy_tag = models.CharField(max_length=32, blank=True)
+    # is_enable = models.BooleanField(default=False)
 
     class Meta:
         db_table = 'mtproxy_proxy'
