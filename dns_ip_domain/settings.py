@@ -91,7 +91,7 @@ DATABASES = {
         'PORT': DB_PORT,
         # 'OPTIONS': {'charset': 'utf8mb4'}
     },
-    'telegram-mtproxy': {
+    'telegram-mtproxy-bot': {
         'ENGINE': DB_ENGINE,
         'NAME': DB_NAME,
         'USER': DB_USER,

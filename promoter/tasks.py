@@ -63,7 +63,7 @@ def find_proxy_in_pages(client, host, page=None):
                 return find_proxy_in_pages(client, host, page=button.data)
 
 
-@shared_task(queue='telegram_mtproxybot')
+@shared_task(queue='telegram-mtproxy-bot')
 def new_proxy(session, api_id, api_hash, host, port, secret_key):
     while cache.get(MTPROXYBOT_CACHE_NAME):
         sleep(1)
@@ -94,7 +94,7 @@ def new_proxy(session, api_id, api_hash, host, port, secret_key):
     cache.delete(MTPROXYBOT_CACHE_NAME)
 
 
-@shared_task(queue='telegram_mtproxybot')
+@shared_task(queue='telegram-mtproxy-bot')
 def delete_proxy(session, api_id, api_hash, host, port):
     while cache.get(MTPROXYBOT_CACHE_NAME):
         sleep(1)
@@ -127,7 +127,7 @@ def delete_proxy(session, api_id, api_hash, host, port):
     cache.delete(MTPROXYBOT_CACHE_NAME)
 
 
-@shared_task(queue='telegram_mtproxybot')
+@shared_task(queue='telegram-mtproxy-bot')
 def set_promotion(proxy_id, channel):
     while cache.get(MTPROXYBOT_CACHE_NAME):
         sleep(1)
@@ -159,7 +159,7 @@ def set_promotion(proxy_id, channel):
     cache.delete(MTPROXYBOT_CACHE_NAME)
 
 
-@shared_task(queue='telegram_mtproxybot')
+@shared_task(queue='telegram-mtproxy-bot')
 def remove_promotion(proxy_id):
     while cache.get(MTPROXYBOT_CACHE_NAME):
         sleep(1)
@@ -188,7 +188,7 @@ def remove_promotion(proxy_id):
     cache.delete(MTPROXYBOT_CACHE_NAME)
 
 
-@shared_task(queue='telegram_mtproxybot')
+@shared_task(queue='telegram-mtproxy-bot')
 def get_proxies_stat():
     while cache.get(MTPROXYBOT_CACHE_NAME):
         sleep(1)
@@ -204,7 +204,7 @@ def get_proxies_stat():
             logger.info(f"{proxy.host} result: {stat}")
             number_of_users = int(stat)
 
-            MTProxyStat.objects.using('telegram-mtproxy').create(
+            MTProxyStat.objects.using('telegram-mtproxy-bot').create(
                 proxy=proxy,
                 stat_message=stat_text,
                 number_of_users=number_of_users,
