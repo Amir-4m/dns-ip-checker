@@ -11,7 +11,7 @@ class MTProxy(models.Model):
     port = models.IntegerField(db_index=True)
     secret_key = models.CharField(max_length=32)
     proxy_tag = models.CharField(max_length=32, blank=True)
-    is_enable = models.BooleanField(default=False)
+    is_enable = models.BooleanField(default=True)
 
     class Meta:
         db_table = 'mtproxy_proxy'
@@ -30,7 +30,7 @@ class ChannelPromotePlan(models.Model):  # celery work with this model
     channel = models.CharField(max_length=60)
 
     class Meta:
-        db_table = 'mptroxy_promote_plan'
+        db_table = 'mtproxy_promote_plan'
 
     def __str__(self):
         return f"{self.proxy} {self.channel}"

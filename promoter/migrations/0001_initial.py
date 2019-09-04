@@ -53,7 +53,7 @@ class Migration(migrations.Migration):
                 ('proxy', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='promoter.MTProxy')),
             ],
             options={
-                'db_table': 'mptroxy_promote_plan',
+                'db_table': 'mtproxy_promote_plan',
             },
         ),
     ]

@@ -5,6 +5,9 @@ from .models import MTProxy, ChannelPromotePlan, MTProxyStat
 class MTProxyInline(admin.TabularInline):
     model = MTProxyStat
     extra = 0
+    max_num = 10
+    fields = ['created_time', 'number_of_users']
+    readonly_fields = ['created_time']
 
     def has_add_permission(self, request, obj=None):
         return False
@@ -18,17 +21,15 @@ class MTProxyInline(admin.TabularInline):
 
 @admin.register(MTProxy)
 class MTProxyAdmin(admin.ModelAdmin):
-    def proxy(self, obj):
-        return obj
-
-    list_display = ['proxy', 'id', 'secret_key', 'proxy_tag']
+    list_display = ['host', 'port', 'is_enable', 'secret_key', 'proxy_tag']
+    list_filter = ['is_enable', 'owner']
     search_fields = ['id', 'host', 'proxy_tag', 'secret_key']
+
     inlines = [MTProxyInline]
 
 
 @admin.register(ChannelPromotePlan)
 class ChannelPromotePlanAdmin(admin.ModelAdmin):
-    def proxy(self, obj):
-        return obj.proxy
-
-    list_display = ['channel', 'proxy']
+    list_display = ['proxy', 'channel', 'from_time', 'until_time']
+    list_filter = ['proxy', 'from_time', 'until_time']
+    search_fields = ['channel']
