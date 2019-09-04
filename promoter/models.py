@@ -1,9 +1,11 @@
 from django.db import models
 from dns_updater.models import Server
+from django.utils.translation import ugettext_lazy as _
 
 
 class MTProxy(models.Model):
     created_time = models.DateTimeField(auto_now_add=True)
+    updated_time = models.DateTimeField(_('updated time'), auto_now=True)
     owner = models.ForeignKey('tel_tools.TelegramUser', on_delete=models.PROTECT)
     host = models.CharField(max_length=50, db_index=True)
     port = models.IntegerField(db_index=True)
@@ -21,6 +23,7 @@ class MTProxy(models.Model):
 
 class ChannelPromotePlan(models.Model):  # celery work with this model
     created_time = models.DateTimeField(auto_now_add=True)
+    updated_time = models.DateTimeField(_('updated time'), auto_now=True)
     from_time = models.DateTimeField()  # format, field name
     until_time = models.DateTimeField()
     proxy = models.ForeignKey(MTProxy, on_delete=models.PROTECT)
@@ -34,13 +37,14 @@ class ChannelPromotePlan(models.Model):  # celery work with this model
 
 
 class MTProxyStat(models.Model):
-    created_time = models.DateTimeField(auto_now_add=True)
+    created_time = models.DateTimeField(auto_now_add=True, db_index=True)
     proxy = models.ForeignKey(MTProxy, on_delete=models.PROTECT)
-    stat_message = models.TextField()
+    stat_message = models.TextField(blank=True)
     number_of_users = models.PositiveIntegerField(null=True)
 
     class Meta:
         db_table = 'mtproxy_stats'
+        ordering = ('-id',)
 
     def __str__(self):
-        return f"{self.proxy} STAT: {self.number_of_users}"
+        return f"{self.proxy} STAT: {self.created_time}"

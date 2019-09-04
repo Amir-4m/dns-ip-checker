@@ -89,6 +89,16 @@ DATABASES = {
         'PASSWORD': DB_PASS,
         'HOST': DB_HOST,
         'PORT': DB_PORT,
+        # 'OPTIONS': {'charset': 'utf8mb4'}
+    },
+    'telegram-mtproxy': {
+        'ENGINE': DB_ENGINE,
+        'NAME': DB_NAME,
+        'USER': DB_USER,
+        'PASSWORD': DB_PASS,
+        'HOST': DB_HOST,
+        'PORT': DB_PORT,
+        'OPTIONS': {'charset': 'utf8mb4'}
     }
 }
 
@@ -96,7 +106,7 @@ CACHES = {
     'default': {
         'BACKEND': CACHE_BACKEND,
         'LOCATION': CACHE_HOST,
-        'KEY_PREFIX': 'VAS_PAYMENT'  # Todo change key_prefix
+        'KEY_PREFIX': 'DNS_IP_DOMAIN'  # Todo change key_prefix
     },
 }
 
@@ -168,7 +178,7 @@ LOGGING = ({
         'file': {
             'level': 'DEBUG' if DEBUG else 'INFO',
             'class': 'logging.FileHandler',
-            'formatter': 'verbose' if DEBUG else 'simple',
+            'formatter': 'verbose',
             'filename': os.path.join(LOG_DIR, 'django.log'),
         },
     },
@@ -182,6 +192,11 @@ LOGGING = ({
             'handlers': ['file']
         },
         'promoter': {
+            'level': 'WARNING',
+            'handlers': ['console'],
+            'propagate': False,
+        },
+        'promoter.tasks': {
             'level': 'DEBUG',
             'handlers': ['console', 'file']
         },
