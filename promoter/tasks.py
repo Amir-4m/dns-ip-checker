@@ -1,16 +1,18 @@
-import os
 import logging
-import re
 from time import sleep
 
 from celery import shared_task
 from telethon.sync import TelegramClient
 from telethon.tl.functions.messages import GetBotCallbackAnswerRequest
 
+from django.core.cache import cache
+
 from .models import MTProxy, MTProxyStat
-from tel_tools.models import TelegramUser
 
 logger = logging.getLogger(__name__)
+
+MTPROXYBOT_CACHE_NAME = 'is_working'
+MTPROXYBOT_CACHE_TIMEOUT = 3600
 
 
 def find_proxy(client, host, page=None):
@@ -39,8 +41,12 @@ def find_proxy(client, host, page=None):
                 return find_proxy(client, host, page=button.data)
 
 
-@shared_task(queue='telegram')
+@shared_task(queue='telegram_mtproxybot')
 def new_proxy(session, api_id, api_hash, host, port, secret_key):
+    if cache.get(MTPROXYBOT_CACHE_NAME) is not None:
+        return
+    cache.set(MTPROXYBOT_CACHE_NAME, True, MTPROXYBOT_CACHE_TIMEOUT)
+
     try:
         with TelegramClient(session, api_id, api_hash) as client:
             client.send_message('MTProxybot', '/newproxy')
@@ -62,9 +68,15 @@ def new_proxy(session, api_id, api_hash, host, port, secret_key):
     except Exception as e:
         logger.error(f"{host}:{port} NOT CREATED, ERROR: {e}.")
 
+    cache.delete(MTPROXYBOT_CACHE_NAME)
 
-@shared_task(queue='telegram')
+
+@shared_task(queue='telegram_mtproxybot')
 def delete_proxy(session, api_id, api_hash, host, port):
+    if cache.get(MTPROXYBOT_CACHE_NAME) is not None:
+        return
+    cache.set(MTPROXYBOT_CACHE_NAME, True, MTPROXYBOT_CACHE_TIMEOUT)
+
     try:
         with TelegramClient(session, api_id, api_hash) as client:
             client.send_message('MTProxybot', '/myproxies')
@@ -88,9 +100,15 @@ def delete_proxy(session, api_id, api_hash, host, port):
     except Exception as e:
         logger.error(f"{host}:{port} NOT DELETED, ERROR: {e}.")
 
+    cache.delete(MTPROXYBOT_CACHE_NAME)
 
-@shared_task(queue='telegram')
+
+@shared_task(queue='telegram_mtproxybot')
 def set_promotion(proxy_id, channel):
+    if cache.get(MTPROXYBOT_CACHE_NAME) is not None:
+        return
+    cache.set(MTPROXYBOT_CACHE_NAME, True, MTPROXYBOT_CACHE_TIMEOUT)
+
     proxy = MTProxy.objects.get(id=proxy_id)
     try:
         with TelegramClient(proxy.owner.session, proxy.owner.api_id, proxy.owner.api_hash) as client:
@@ -113,9 +131,15 @@ def set_promotion(proxy_id, channel):
         logger.error(
             f"{proxy.host}:{proxy.port} NOT SET FOR {channel}\n{e}.")
 
+    cache.delete(MTPROXYBOT_CACHE_NAME)
 
-@shared_task(queue='telegram')
+
+@shared_task(queue='telegram_mtproxybot')
 def remove_promotion(proxy_id):
+    if cache.get(MTPROXYBOT_CACHE_NAME) is not None:
+        return
+    cache.set(MTPROXYBOT_CACHE_NAME, True, MTPROXYBOT_CACHE_TIMEOUT)
+
     proxy = MTProxy.objects.get(id=proxy_id)
     try:
         with TelegramClient(proxy.owner.session, proxy.owner.api_id, proxy.owner.api_hash) as client:
@@ -135,9 +159,15 @@ def remove_promotion(proxy_id):
     except Exception as e:
         logger.error(f"{proxy.host}:{proxy.port} CAN NOT REMOVE PROMOTION, ERROR: {e}.")
 
+    cache.delete(MTPROXYBOT_CACHE_NAME)
 
-@shared_task(queue='telegram')
+
+@shared_task(queue='telegram_mtproxybot')
 def get_proxies_stat():
+    if cache.get(MTPROXYBOT_CACHE_NAME) is not None:
+        return
+    cache.set(MTPROXYBOT_CACHE_NAME, True, MTPROXYBOT_CACHE_TIMEOUT)
+
     proxies = MTProxy.objects.all().order_by('owner_id')
     number_of_users = None
     for proxy in proxies:
@@ -169,3 +199,5 @@ def get_proxies_stat():
             stat_message=stat_text,
             number_of_users=number_of_users,
         )
+
+        cache.delete(MTPROXYBOT_CACHE_NAME)
