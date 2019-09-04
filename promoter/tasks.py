@@ -11,11 +11,33 @@ from .models import MTProxy, MTProxyStat
 
 logger = logging.getLogger(__name__)
 
-MTPROXYBOT_CACHE_NAME = 'is_working'
-MTPROXYBOT_CACHE_TIMEOUT = 3600
+MTPROXYBOT_CACHE_NAME = 'telegram-mtproxy-bot-lock'
+MTPROXYBOT_CACHE_TIMEOUT = 600
 
 
-def find_proxy(client, host, page=None):
+def find_proxy(proxy):
+    stat_text = ''
+    try:
+        with TelegramClient(proxy.owner.session, proxy.owner.api_id, proxy.owner.api_hash) as client:
+            client.send_message('MTProxybot', '/myproxies')
+            sleep(0.5)
+
+            to_id, msg_id, button_number = find_proxy_in_pages(client, proxy.host)
+
+            client(GetBotCallbackAnswerRequest(
+                to_id,
+                msg_id,
+                data=bytes(f"proxies/{button_number}/stats", 'utf-8'),
+            ))
+            stat_text = client.get_messages('MTProxybot')[0].message
+
+    except Exception as e:
+        logger.error(f"[{proxy.host} error: {e}")
+
+    return stat_text
+
+
+def find_proxy_in_pages(client, host, page=None):
     if page:
         res = client.get_messages('MTProxybot')[0]
         client(GetBotCallbackAnswerRequest(
@@ -38,13 +60,14 @@ def find_proxy(client, host, page=None):
                 ))
                 return res.to_id, res.id, button_number
             if button.text == '»':
-                return find_proxy(client, host, page=button.data)
+                return find_proxy_in_pages(client, host, page=button.data)
 
 
 @shared_task(queue='telegram_mtproxybot')
 def new_proxy(session, api_id, api_hash, host, port, secret_key):
-    if cache.get(MTPROXYBOT_CACHE_NAME) is not None:
-        return
+    while cache.get(MTPROXYBOT_CACHE_NAME):
+        sleep(1)
+
     cache.set(MTPROXYBOT_CACHE_NAME, True, MTPROXYBOT_CACHE_TIMEOUT)
 
     try:
@@ -73,8 +96,9 @@ def new_proxy(session, api_id, api_hash, host, port, secret_key):
 
 @shared_task(queue='telegram_mtproxybot')
 def delete_proxy(session, api_id, api_hash, host, port):
-    if cache.get(MTPROXYBOT_CACHE_NAME) is not None:
-        return
+    while cache.get(MTPROXYBOT_CACHE_NAME):
+        sleep(1)
+
     cache.set(MTPROXYBOT_CACHE_NAME, True, MTPROXYBOT_CACHE_TIMEOUT)
 
     try:
@@ -82,7 +106,7 @@ def delete_proxy(session, api_id, api_hash, host, port):
             client.send_message('MTProxybot', '/myproxies')
             sleep(0.5)
 
-            to_id, msg_id, button_number = find_proxy(client, host)
+            to_id, msg_id, button_number = find_proxy_in_pages(client, host)
 
             client(GetBotCallbackAnswerRequest(
                 to_id,
@@ -105,8 +129,9 @@ def delete_proxy(session, api_id, api_hash, host, port):
 
 @shared_task(queue='telegram_mtproxybot')
 def set_promotion(proxy_id, channel):
-    if cache.get(MTPROXYBOT_CACHE_NAME) is not None:
-        return
+    while cache.get(MTPROXYBOT_CACHE_NAME):
+        sleep(1)
+
     cache.set(MTPROXYBOT_CACHE_NAME, True, MTPROXYBOT_CACHE_TIMEOUT)
 
     proxy = MTProxy.objects.get(id=proxy_id)
@@ -115,7 +140,7 @@ def set_promotion(proxy_id, channel):
             client.send_message('MTProxybot', '/myproxies')
             sleep(0.5)
 
-            to_id, msg_id, button_number = find_proxy(client, proxy.host)
+            to_id, msg_id, button_number = find_proxy_in_pages(client, proxy.host)
 
             client(GetBotCallbackAnswerRequest(
                 to_id,
@@ -136,8 +161,9 @@ def set_promotion(proxy_id, channel):
 
 @shared_task(queue='telegram_mtproxybot')
 def remove_promotion(proxy_id):
-    if cache.get(MTPROXYBOT_CACHE_NAME) is not None:
-        return
+    while cache.get(MTPROXYBOT_CACHE_NAME):
+        sleep(1)
+
     cache.set(MTPROXYBOT_CACHE_NAME, True, MTPROXYBOT_CACHE_TIMEOUT)
 
     proxy = MTProxy.objects.get(id=proxy_id)
@@ -146,7 +172,7 @@ def remove_promotion(proxy_id):
             client.send_message('MTProxybot', '/myproxies')
             sleep(0.5)
 
-            to_id, msg_id, button_number = find_proxy(client, proxy.host)
+            to_id, msg_id, button_number = find_proxy_in_pages(client, proxy.host)
 
             client(GetBotCallbackAnswerRequest(
                 to_id,
@@ -164,40 +190,30 @@ def remove_promotion(proxy_id):
 
 @shared_task(queue='telegram_mtproxybot')
 def get_proxies_stat():
-    if cache.get(MTPROXYBOT_CACHE_NAME) is not None:
-        return
+    while cache.get(MTPROXYBOT_CACHE_NAME):
+        sleep(1)
+
+    proxies = MTProxy.objects.filter(is_enable=True).order_by('owner_id')
+
     cache.set(MTPROXYBOT_CACHE_NAME, True, MTPROXYBOT_CACHE_TIMEOUT)
 
-    proxies = MTProxy.objects.all().order_by('owner_id')
-    number_of_users = None
     for proxy in proxies:
         try:
-            with TelegramClient(proxy.owner.session, proxy.owner.api_id, proxy.owner.api_hash) as client:
-                client.send_message('MTProxybot', '/myproxies')
-                sleep(0.5)
+            stat_text = find_proxy(proxy)
+            stat = (stat_text.split('\n')[11][11:]).replace(" ", "")
+            logger.info(f"{proxy.host} result: {stat}")
+            number_of_users = int(stat)
 
-                to_id, msg_id, button_number = find_proxy(client, proxy.host)
-
-                client(GetBotCallbackAnswerRequest(
-                    to_id,
-                    msg_id,
-                    data=bytes(f"proxies/{button_number}/stats", 'utf-8'),
-                ))
-                stat_text = client.get_messages('MTProxybot')[0].message
-
-                stat = (stat_text.split('\n')[11][11:]).replace(" ", "")
-                logger.info(f"{proxy.host} ---- STAT: {stat}")
-                number_of_users = int(stat)
-
+            MTProxyStat.objects.using('telegram-mtproxy').create(
+                proxy=proxy,
+                stat_message=stat_text,
+                number_of_users=number_of_users,
+            )
         except IndexError:
-            logger.error(f"{proxy.host} ---- STAT: {stat_text}")
+            logger.error(f"{proxy.host} Index Error, text: {stat_text}")
+            continue
         except Exception as e:
-            logger.error(f"{proxy.host} ---- ERROR: {e}")
+            logger.error(f"{proxy.host} error: {e}")
+            continue
 
-        MTProxyStat.objects.create(
-            proxy=proxy,
-            stat_message=stat_text,
-            number_of_users=number_of_users,
-        )
-
-        cache.delete(MTPROXYBOT_CACHE_NAME)
+    cache.delete(MTPROXYBOT_CACHE_NAME)
