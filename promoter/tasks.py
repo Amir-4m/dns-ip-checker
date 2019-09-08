@@ -151,7 +151,6 @@ def set_promotion(proxy_id, channel):
             client.send_message('MTProxybot', channel)
 
             logger.info(f"{proxy.host}:{proxy.port} SET FOR {channel}.")
-            MTProxy.objects.filter(id=proxy_id).update(is_enable=True)
 
     except Exception as e:
         logger.error(
@@ -182,7 +181,6 @@ def remove_promotion(proxy_id):
             ))
 
             logger.info(f"{proxy.host}:{proxy.port} REMOVED PROMOTION.")
-            MTProxy.objects.filter(id=proxy_id).update(is_enable=False)
 
     except Exception as e:
         logger.error(f"{proxy.host}:{proxy.port} CAN NOT REMOVE PROMOTION, ERROR: {e}.")

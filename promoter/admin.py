@@ -20,6 +20,11 @@ class ChannelPromotePlanAdmin(admin.ModelAdmin):
 
     list_display = ['proxy', 'channel', 'from_time', 'until_time']
 
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == 'proxy':
+            kwargs["queryset"] = MTProxy.objects.filter(is_enable=True)
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
 
 @admin.register(MTProxyStat)
 class MTProxyStatAdmin(admin.ModelAdmin):

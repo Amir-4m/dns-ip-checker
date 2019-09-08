@@ -22,11 +22,6 @@ def delete_mtproxy(sender, instance, **kwargs):
 
 @receiver(post_save, sender=ChannelPromotePlan)
 def promote_plan(sender, instance, created, **kwargs):
-    if created:
+    if created or instance.has_changed():
         set_promotion.apply_async(args=(instance.proxy.id, instance.channel,), eta=instance.from_time)
         remove_promotion.apply_async(args=(instance.proxy.id,),  eta=instance.until_time)
-
-    elif any([instance.from_time_changed, instance.until_time_changed, instance.channel_changed]):
-        set_promotion.apply_async(args=(instance.proxy.id, instance.channel,), eta=instance.from_time)
-        remove_promotion.apply_async(args=(instance.proxy.id,), eta=instance.until_time)
-

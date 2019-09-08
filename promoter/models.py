@@ -11,7 +11,7 @@ class MTProxy(models.Model):
     port = models.IntegerField(db_index=True)
     secret_key = models.CharField(max_length=32)
     proxy_tag = models.CharField(max_length=32, blank=True)
-    is_enable = models.BooleanField(_("is promotion"), default=False)
+    is_enable = models.BooleanField(_("is_enable"), default=False)
 
     class Meta:
         db_table = 'mtproxy_proxy'
@@ -46,6 +46,9 @@ class ChannelPromotePlan(models.Model):  # celery work with this model
 
     def channel_changed(self):
         return self._b_channel != self.channel
+
+    def has_changed(self):
+        return any([self.from_time_changed, self.until_time_changed, self.channel_changed])
 
     def __str__(self):
         return f"{self.proxy} {self.channel}"
