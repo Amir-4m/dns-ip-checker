@@ -7,5 +7,5 @@ from promoter.models import ChannelPromotePlan
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
-        for plan in ChannelPromotePlan.objects.filter(from_time__gte=timezone.now()):
-            remove_promotion.delay(plan.proxy.id)
+        for plan in ChannelPromotePlan.objects.filter(until_time__gte=timezone.now(), unset_time__isnull=True):
+            remove_promotion.delay(plan.proxy.id, plan.id)
