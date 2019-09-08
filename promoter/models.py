@@ -16,6 +16,8 @@ class MTProxy(models.Model):
     class Meta:
         db_table = 'mtproxy_proxy'
         unique_together = ('host', 'port')
+        verbose_name = _('MTProto proxy')
+        verbose_name_plural = _('MTProto proxies')
 
     def __str__(self):
         return f"{self.host}:{self.port}"
@@ -31,6 +33,7 @@ class ChannelPromotePlan(models.Model):  # celery work with this model
 
     class Meta:
         db_table = 'mtproxy_promote_plan'
+        verbose_name = _('promotion plan')
 
     def __str__(self):
         return f"{self.proxy} {self.channel}"
@@ -45,6 +48,7 @@ class MTProxyStat(models.Model):
     class Meta:
         db_table = 'mtproxy_stats'
         ordering = ('-id',)
+        verbose_name = _('proxy stat')
 
     def __str__(self):
         return f"{self.proxy} STAT: {self.created_time}"

@@ -5,7 +5,6 @@ from .models import MTProxy, ChannelPromotePlan, MTProxyStat
 class MTProxyInline(admin.TabularInline):
     model = MTProxyStat
     extra = 0
-    max_num = 10
     fields = ['created_time', 'number_of_users']
     readonly_fields = ['created_time']
 
