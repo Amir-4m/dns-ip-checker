@@ -13,7 +13,7 @@ class MTProxyAdmin(admin.ModelAdmin):
 @admin.register(ChannelPromotePlan)
 class ChannelPromotePlanAdmin(admin.ModelAdmin):
     list_display = ['proxy', 'channel', 'from_time', 'until_time']
-    list_filter = ['proxy', 'from_time', 'until_time']
+    list_filter = ['proxy']
     search_fields = ['channel']
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
@@ -27,8 +27,7 @@ class ChannelPromotePlanAdmin(admin.ModelAdmin):
 
 @admin.register(MTProxyStat)
 class MTProxyStatAdmin(admin.ModelAdmin):
-    list_display = ['proxy', 'number_of_users', 'created_time', 'stat_message']
-    search_fields = ['proxy__host', 'proxy__port', 'created_time']
+    list_display = ['proxy', 'created_time', 'number_of_users']
     list_filter = ['proxy__host', 'proxy__port']
 
     def has_add_permission(self, request):

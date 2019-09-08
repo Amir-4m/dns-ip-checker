@@ -29,6 +29,8 @@ class ChannelPromotePlan(models.Model):  # celery work with this model
     until_time = models.DateTimeField(_("promotion end time"))
     proxy = models.ForeignKey(MTProxy, on_delete=models.PROTECT)
     channel = models.CharField(_("channel"), max_length=60)
+    set_time = models.DateTimeField(null=True, editable=False)
+    unset_time = models.DateTimeField(null=True, editable=False)
 
     class Meta:
         db_table = 'mtproxy_promote_plan'
