@@ -8,7 +8,7 @@ from telethon.tl.functions.messages import GetBotCallbackAnswerRequest
 from django.core.cache import cache
 from django.utils import timezone
 
-from .models import MTProxy, MTProxyStat, ChannelPromotePlan
+from .models import MTProxy, MTProxyStat
 
 logger = logging.getLogger(__name__)
 
@@ -129,7 +129,7 @@ def delete_proxy(session, api_id, api_hash, host, port):
 
 
 @shared_task(queue='telegram-mtproxy-bot')
-def set_promotion(proxy_id, channel, plan_id):
+def set_promotion(proxy_id, channel):
     while cache.get(MTPROXYBOT_CACHE_NAME):
         sleep(1)
 
@@ -153,8 +153,6 @@ def set_promotion(proxy_id, channel, plan_id):
 
             logger.info(f"{proxy.host}:{proxy.port} SET FOR {channel}.")
 
-            ChannelPromotePlan.objects.filter(id=plan_id).update(set_time=timezone.now())
-
     except Exception as e:
         logger.error(
             f"{proxy.host}:{proxy.port} NOT SET FOR {channel}\n{e}.")
@@ -163,7 +161,7 @@ def set_promotion(proxy_id, channel, plan_id):
 
 
 @shared_task(queue='telegram-mtproxy-bot')
-def remove_promotion(proxy_id, plan_id):
+def remove_promotion(proxy_id):
     while cache.get(MTPROXYBOT_CACHE_NAME):
         sleep(1)
 
@@ -184,8 +182,6 @@ def remove_promotion(proxy_id, plan_id):
             ))
 
             logger.info(f"{proxy.host}:{proxy.port} REMOVED PROMOTION.")
-
-            ChannelPromotePlan.objects.filter(id=plan_id).update(unset_time=timezone.now())
 
     except Exception as e:
         logger.error(f"{proxy.host}:{proxy.port} CAN NOT REMOVE PROMOTION, ERROR: {e}.")

@@ -3,7 +3,7 @@ from datetime import datetime
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
-from .models import MTProxy, ChannelPromotePlan
+from .models import MTProxy
 from .tasks import new_proxy, delete_proxy, set_promotion, remove_promotion
 
 

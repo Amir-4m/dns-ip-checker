@@ -22,42 +22,6 @@ class MTProxy(models.Model):
         return f"{self.host}:{self.port}"
 
 
-class ChannelPromotePlan(models.Model):  # celery work with this model
-    created_time = models.DateTimeField(_("created_time"), auto_now_add=True)
-    updated_time = models.DateTimeField(_("updated_time"), auto_now=True)
-    from_time = models.DateTimeField(_("promotion start time"))  # format, field name
-    until_time = models.DateTimeField(_("promotion end time"))
-    proxy = models.ForeignKey(MTProxy, on_delete=models.PROTECT)
-    channel = models.CharField(_("channel"), max_length=60)
-    set_time = models.DateTimeField(null=True, editable=False)
-    unset_time = models.DateTimeField(null=True, editable=False)
-
-    class Meta:
-        db_table = 'mtproxy_promote_plan'
-        verbose_name = _('promotion plan')
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._b_from_time = self.from_time
-        self._b_until_time = self.until_time
-        self._b_channel = self.channel
-
-    def from_time_changed(self):
-        return self._b_from_time != self.from_time
-
-    def until_time_changed(self):
-        return self._b_until_time != self.until_time
-
-    def channel_changed(self):
-        return self._b_channel != self.channel
-
-    def has_changed(self):
-        return any([self.from_time_changed, self.until_time_changed, self.channel_changed])
-
-    def __str__(self):
-        return f"{self.proxy} {self.channel}"
-
-
 class MTProxyStat(models.Model):
     created_time = models.DateTimeField(_("created_time"), auto_now_add=True, db_index=True)
     proxy = models.ForeignKey(MTProxy, on_delete=models.PROTECT)

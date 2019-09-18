@@ -1,6 +1,8 @@
+from django.urls import path
 from django.contrib import admin
 
-from .models import MTProxy, ChannelPromotePlan, MTProxyStat
+from .models import MTProxy, MTProxyStat
+from .views import mtproxy_csv_import
 
 
 @admin.register(MTProxy)
@@ -9,20 +11,10 @@ class MTProxyAdmin(admin.ModelAdmin):
     list_filter = ['is_enable', 'owner']
     search_fields = ['id', 'host', 'proxy_tag', 'secret_key']
 
-
-@admin.register(ChannelPromotePlan)
-class ChannelPromotePlanAdmin(admin.ModelAdmin):
-    list_display = ['proxy', 'channel', 'from_time', 'until_time']
-    list_filter = ['proxy']
-    search_fields = ['channel']
-
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        if db_field.name == 'proxy':
-            kwargs["queryset"] = MTProxy.objects.filter(is_enable=True)
-        return super().formfield_for_foreignkey(db_field, request, **kwargs)
-
-    def proxy(self, obj):
-        return obj.proxy
+    def get_urls(self):
+        return [
+                   path('mtproxy_csv/', self.admin_site.admin_view(mtproxy_csv_import), name='mtproxy-csv-import'),
+               ] + super().get_urls()
 
 
 @admin.register(MTProxyStat)
