@@ -136,6 +136,23 @@ def set_promotion(proxy_id, channel):
     cache.set(MTPROXYBOT_CACHE_NAME, True, MTPROXYBOT_CACHE_TIMEOUT)
 
     proxy = MTProxy.objects.get(id=proxy_id)
+
+    try:
+        stat_text = find_proxy(proxy)
+        stat = (stat_text.split('\n')[11][11:]).replace(" ", "")
+        logger.info(f"{proxy.host} result: {stat}")
+        number_of_users = int(stat)
+
+        MTProxyStat.objects.using('telegram-mtproxy-bot').create(
+            proxy=proxy,
+            stat_message=stat_text,
+            number_of_users=number_of_users,
+        )
+    except IndexError:
+        logger.error(f"{proxy.host} Index Error, text: {stat_text}")
+    except Exception as e:
+        logger.error(f"{proxy.host} error: {e}")
+
     try:
         with TelegramClient(proxy.owner.session, proxy.owner.api_id, proxy.owner.api_hash) as client:
             client.send_message('MTProxybot', '/myproxies')
