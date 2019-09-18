@@ -15,32 +15,27 @@ from .models import MTProxy
 logger = logging.getLogger('promoter.tasks')
 
 
-def clocked_creator(plan, time):
-    if plan == "o":
+def clocked_creator(hour, minute, day_of_week, is_periodic):
+    if is_periodic == "n":
         clocked = ClockedSchedule.objects.create(
             enabled=True,
             clocked_time=datetime.datetime.combine(timezone.now().date(),
-                                                   datetime.time(int(time[0]), int(time[1])))
+                                                   datetime.datetime.strptime(f"{hour}:{minute}", "%H:%M").time())
         )
-        mode = 'clocked'
-    elif plan == "e":
-        clocked = CrontabSchedule.objects.create(
-            minute=time[1],
-            hour=time[0],
-            timezone="Asia/Tehran",
-
-        )
-        mode = 'crontab'
     else:
         clocked = CrontabSchedule.objects.create(
-            minute=time[1],
-            hour=time[0],
+            minute=minute,
+            hour=hour,
             timezone="Asia/Tehran",
-            day_of_week=eval(plan),
+            day_of_week=day_of_week,
         )
-        mode = 'crontab'
+    return clocked
 
-    return clocked, mode
+
+def day_formatter(day_list):
+    if '*' in day_list:
+        return "*"
+    return eval(",".join(day_list))
 
 
 def mtproxy_csv_import(request):
@@ -48,32 +43,38 @@ def mtproxy_csv_import(request):
     if request.method == 'POST':
         form = CSVPromotionAdmin(request.POST, request.FILES)
         if form.is_valid():
+
             csv_file = request.FILES['file'].readlines()
             counter = 0
             for line in csv_file:
-                line = line.decode('utf-8').rstrip('\n').split(',')
-                time = line[2].rstrip('PM').rstrip('AM').strip()
-                time = time.split(':')
-                host = line[0]
-                channel = line[1]
-                plan = ",".join(line[3:])
-                proxy = MTProxy.objects.get(host=host).id
-                clocked, mode = clocked_creator(plan, time)
-                p = PeriodicTask(
-                    name=f"{host}, {channel}, {clocked}",
-                    task="promoter.tasks.set_promotion",
-                    one_off=plan == "o",
-                    queue="telegram-mtproxy-bot",
-                    start_time=timezone.now(),
-                    args=json.dumps([proxy, channel]),
-                )
-                if mode == 'clocked':
-                    p.clocked = clocked
-                else:
-                    p.crontab = clocked
+                try:
+                    line = line.decode('utf-8').rstrip('\n').split(',')
+                    host = line[0]
+                    channel = line[1]
+                    hour = line[2]
+                    minute = line[3]
+                    is_periodic = line[4]
+                    day_of_week = line[5:]
+                    proxy = MTProxy.objects.get(host=host).id
+                    clocked = clocked_creator(hour, minute, day_formatter(day_of_week), is_periodic)
+                    p = PeriodicTask(
+                        name=f"{host}, {channel}, {clocked}",
+                        task="promoter.tasks.set_promotion",
+                        one_off=is_periodic == "n",
+                        queue="telegram-mtproxy-bot",
+                        start_time=timezone.now(),
+                        args=json.dumps([proxy, channel]),
+                    )
+                    if is_periodic == 'n':
+                        p.clocked = clocked
+                    else:
+                        p.crontab = clocked
 
-                p.save()
-                counter += 1
+                    p.save()
+                    counter += 1
+
+                except Exception as e:
+                    logger.error(f"PeriodicTask creation failed for record: {line.decode('utf-8')} {e}")
 
             messages.success(request, f"{counter} periodic tasks created successfully")
             return redirect('admin:django_celery_beat_periodictask_changelist')
