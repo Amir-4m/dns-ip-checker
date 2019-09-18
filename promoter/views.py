@@ -48,7 +48,7 @@ def mtproxy_csv_import(request):
             counter = 0
             for line in csv_file:
                 try:
-                    line = line.decode('utf-8').rstrip('\n').split(',')
+                    line = line.decode('utf-8').rstrip('\n').rstrip('\r').split(',')
                     host = line[0]
                     channel = line[1]
                     hour = line[2]
@@ -58,7 +58,7 @@ def mtproxy_csv_import(request):
                     proxy = MTProxy.objects.get(host=host).id
                     clocked = clocked_creator(hour, minute, day_formatter(day_of_week), is_periodic)
                     p = PeriodicTask(
-                        name=f"{host}, {channel}, {clocked}",
+                        name=f"{host}, {channel}",
                         task="promoter.tasks.set_promotion",
                         one_off=is_periodic == "n",
                         queue="telegram-mtproxy-bot",
