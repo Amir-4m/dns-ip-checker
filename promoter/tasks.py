@@ -6,6 +6,7 @@ from telethon.sync import TelegramClient
 from telethon.tl.functions.messages import GetBotCallbackAnswerRequest
 
 from django.core.cache import cache
+from django.utils import timezone
 
 from .models import MTProxy, MTProxyStat
 
