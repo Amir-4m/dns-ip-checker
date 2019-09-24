@@ -181,6 +181,12 @@ LOGGING = ({
             'formatter': 'verbose',
             'filename': os.path.join(LOG_DIR, 'django.log'),
         },
+        'users_count_file': {
+            'level': 'DEBUG' if DEBUG else 'INFO',
+            'class': 'logging.FileHandler',
+            'formatter': 'verbose',
+            'filename': os.path.join(LOG_DIR, 'users_count.log'),
+        },
     },
     'loggers': {
         'domain_check': {
@@ -207,6 +213,10 @@ LOGGING = ({
         'tel_tools': {
             'level': 'DEBUG',
             'handlers': ['console', 'file']
+        },
+        'channel_users': {
+            'level': 'DEBUG',
+            'handlers': ['console', 'users_count_file']
         },
     }
 })

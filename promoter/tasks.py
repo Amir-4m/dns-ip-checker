@@ -4,16 +4,26 @@ from time import sleep
 from celery import shared_task
 from telethon.sync import TelegramClient
 from telethon.tl.functions.messages import GetBotCallbackAnswerRequest
+from telethon.tl.functions.channels import GetFullChannelRequest
 
 from django.core.cache import cache
-from django.utils import timezone
 
 from .models import MTProxy, MTProxyStat
 
 logger = logging.getLogger(__name__)
+channel_logger = logging.getLogger('channel_users')
 
 MTPROXYBOT_CACHE_NAME = 'telegram-mtproxy-bot-lock'
 MTPROXYBOT_CACHE_TIMEOUT = 600
+
+
+def channel_users_count(channel_tag, proxy):
+    with TelegramClient(proxy.owner.session, proxy.owner.api_id, proxy.owner.api_hash) as client:
+        try:
+            users_count = client(GetFullChannelRequest(channel_tag))
+            return users_count.full_chat.participants_count
+        except Exception as e:
+            logger.error(f"getting users count failed for {channel_tag} {e}")
 
 
 def find_proxy(proxy):
@@ -52,13 +62,15 @@ def find_proxy_in_pages(client, host, page=None):
     rows = res.reply_markup.rows
     for row in rows:
         for button in row.buttons:
-            if host in button.text:
+            if button.text.startswith(host):
                 button_number = button.data.decode("utf-8").split('/')[1]
                 client(GetBotCallbackAnswerRequest(
                     res.to_id,
                     res.id,
                     data=bytes(f"proxies/{button_number}", 'utf-8'),
                 ))
+                promoted_channel = client.get_messages('@MTProxybot')[0].entities[2].url.split('/')[-1]
+                cache.set(host, f"@{promoted_channel}")
                 return res.to_id, res.id, button_number
             if button.text == '»':
                 return find_proxy_in_pages(client, host, page=button.data)
@@ -136,12 +148,20 @@ def set_promotion(proxy_id, channel):
     cache.set(MTPROXYBOT_CACHE_NAME, True, MTPROXYBOT_CACHE_TIMEOUT)
 
     proxy = MTProxy.objects.get(id=proxy_id)
+
     try:
         with TelegramClient(proxy.owner.session, proxy.owner.api_id, proxy.owner.api_hash) as client:
             client.send_message('MTProxybot', '/myproxies')
             sleep(0.5)
 
             to_id, msg_id, button_number = find_proxy_in_pages(client, proxy.host)
+
+            try:
+                previous_channel = cache.get(proxy.host)
+                users_count = channel_users_count(previous_channel, proxy)
+                channel_logger.info(f"{proxy} promoted channel: {previous_channel} users count: {users_count}")
+            except Exception as e:
+                logger.error(f"getting promotion info for {proxy} failed {e}")
 
             client(GetBotCallbackAnswerRequest(
                 to_id,
@@ -152,6 +172,10 @@ def set_promotion(proxy_id, channel):
             client.send_message('MTProxybot', channel)
 
             logger.info(f"{proxy.host}:{proxy.port} SET FOR {channel}.")
+
+            # try except ?!
+            users_count = client(GetFullChannelRequest(channel)).full_chat.participants_count
+            channel_logger.info(f"{proxy} promoted channel: {channel} users count: {users_count}")
 
     except Exception as e:
         logger.error(
@@ -206,6 +230,7 @@ def get_proxies_stat():
             number_of_users = int(stat)
 
             MTProxyStat.objects.using('telegram-mtproxy-bot').create(
+                promoted_channel=cache.get(proxy.host),
                 proxy=proxy,
                 stat_message=stat_text,
                 number_of_users=number_of_users,
