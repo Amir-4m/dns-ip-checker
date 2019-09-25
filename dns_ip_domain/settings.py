@@ -185,7 +185,7 @@ LOGGING = ({
             'level': 'DEBUG' if DEBUG else 'INFO',
             'class': 'logging.FileHandler',
             'formatter': 'verbose',
-            'filename': os.path.join(LOG_DIR, 'users_count.log'),
+            'filename': os.path.join(LOG_DIR, 'telegram_channels_count.log'),
         },
     },
     'loggers': {
@@ -214,7 +214,7 @@ LOGGING = ({
             'level': 'DEBUG',
             'handlers': ['console', 'file']
         },
-        'channel_users': {
+        'channel_users_count': {
             'level': 'DEBUG',
             'handlers': ['console', 'users_count_file']
         },

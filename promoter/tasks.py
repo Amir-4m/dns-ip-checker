@@ -11,19 +11,19 @@ from django.core.cache import cache
 from .models import MTProxy, MTProxyStat
 
 logger = logging.getLogger(__name__)
-channel_logger = logging.getLogger('channel_users')
+channel_logger = logging.getLogger('channel_users_count')
 
 MTPROXYBOT_CACHE_NAME = 'telegram-mtproxy-bot-lock'
 MTPROXYBOT_CACHE_TIMEOUT = 600
 
 
 def channel_users_count(channel_tag, proxy):
-    with TelegramClient(proxy.owner.session, proxy.owner.api_id, proxy.owner.api_hash) as client:
-        try:
+    try:
+        with TelegramClient(proxy.owner.session, proxy.owner.api_id, proxy.owner.api_hash) as client:
             users_count = client(GetFullChannelRequest(channel_tag))
-            return users_count.full_chat.participants_count
-        except Exception as e:
-            logger.error(f"getting users count failed for {channel_tag} {e}")
+            channel_logger.info(f"{proxy} promoted channel: {channel_tag} users count: {users_count}")
+    except Exception as e:
+        logger.error(f"getting users count failed for {channel_tag} {e}")
 
 
 def find_proxy(proxy):
@@ -69,8 +69,13 @@ def find_proxy_in_pages(client, host, page=None):
                     res.id,
                     data=bytes(f"proxies/{button_number}", 'utf-8'),
                 ))
-                promoted_channel = client.get_messages('@MTProxybot')[0].entities[2].url.split('/')[-1]
-                cache.set(host, f"@{promoted_channel}")
+
+                try:
+                    promoted_channel = client.get_messages('@MTProxybot')[0].entities[2].url.split('/')[-1]
+                    cache.set(host, f"@{promoted_channel}")
+                except Exception as e:
+                    logger.error(f"getting previous channel failed for {host} {e}")
+
                 return res.to_id, res.id, button_number
             if button.text == '»':
                 return find_proxy_in_pages(client, host, page=button.data)
@@ -156,26 +161,20 @@ def set_promotion(proxy_id, channel):
 
             to_id, msg_id, button_number = find_proxy_in_pages(client, proxy.host)
 
-            try:
-                previous_channel = cache.get(proxy.host)
-                users_count = channel_users_count(previous_channel, proxy)
-                channel_logger.info(f"{proxy} promoted channel: {previous_channel} users count: {users_count}")
-            except Exception as e:
-                logger.error(f"getting promotion info for {proxy} failed {e}")
+            previous_channel = cache.get(proxy.host)
+            if previous_channel is not None:
+                channel_users_count(previous_channel, proxy)
+                cache.delete(proxy.host)
 
             client(GetBotCallbackAnswerRequest(
                 to_id,
                 msg_id,
                 data=bytes(f"proxies/{button_number}/edit/promo", 'utf-8'),
             ))
-
             client.send_message('MTProxybot', channel)
-
             logger.info(f"{proxy.host}:{proxy.port} SET FOR {channel}.")
 
-            # try except ?!
-            users_count = client(GetFullChannelRequest(channel)).full_chat.participants_count
-            channel_logger.info(f"{proxy} promoted channel: {channel} users count: {users_count}")
+            channel_users_count(channel, proxy)
 
     except Exception as e:
         logger.error(
