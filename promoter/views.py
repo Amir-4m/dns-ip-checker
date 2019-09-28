@@ -17,22 +17,41 @@ logger = logging.getLogger('promoter.tasks')
 
 def clocked_creator(hour, minute, day_of_week, is_periodic):
     if is_periodic == "n":
-        clocked = ClockedSchedule.objects.get_or_create(
+        clocked = ClockedSchedule.objects.filter(
             clocked_time=datetime.datetime.combine(
                 timezone.now().date(),
                 datetime.datetime.strptime(f"{hour}:{minute}", "%H:%M").time()
             )
-        )
-        if not clocked.enabled:
+        ).first()
+
+        if clocked is None:
+            clocked = ClockedSchedule.objects.create(
+                clocked_time=datetime.datetime.combine(
+                    timezone.now().date(),
+                    datetime.datetime.strptime(f"{hour}:{minute}", "%H:%M").time()
+                )
+            )
+
+        elif not clocked.enabled:
             clocked.enabled = True
             clocked.save()
+
     else:
-        clocked = CrontabSchedule.objects.get_or_create(
+        clocked = CrontabSchedule.objects.filter(
             minute=minute,
             hour=hour,
             timezone="Asia/Tehran",
             day_of_week=day_of_week,
-        )
+        ).first()
+
+        if clocked is None:
+            clocked = CrontabSchedule.objects.create(
+                minute=minute,
+                hour=hour,
+                timezone="Asia/Tehran",
+                day_of_week=day_of_week,
+            )
+
     return clocked
 
 
