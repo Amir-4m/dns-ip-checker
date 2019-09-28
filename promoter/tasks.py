@@ -216,6 +216,7 @@ def get_proxies_stat():
     cache.set(MTPROXYBOT_CACHE_NAME, True, MTPROXYBOT_CACHE_TIMEOUT)
 
     for proxy in proxies:
+        logger.info(f'get stat for {proxy.host}')
         try:
             stat_text = find_proxy(proxy)
             stat = (stat_text.split('\n')[11][11:]).replace(" ", "")
