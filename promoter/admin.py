@@ -1,6 +1,6 @@
 import json
 import logging
-from datetime import datetime
+import datetime
 
 from django_celery_beat.models import PeriodicTask, CrontabSchedule, ClockedSchedule
 
@@ -19,18 +19,39 @@ logger = logging.getLogger('promoter.tasks')
 
 def clocked_creator(hour, minute, day_of_week, date):
     if date == "*":
-        clocked = CrontabSchedule.objects.create(
+        clocked = CrontabSchedule.objects.filter(
             minute=minute,
             hour=hour,
             timezone="Asia/Tehran",
             day_of_week=day_of_week,
-        )
+        ).first()
+
+        if clocked is None:
+            clocked = CrontabSchedule.objects.create(
+                minute=minute,
+                hour=hour,
+                timezone="Asia/Tehran",
+                day_of_week=day_of_week,
+            )
     else:
-        clocked = ClockedSchedule.objects.create(
-            enabled=True,
-            clocked_time=datetime.combine(datetime.strptime(date, "%Y-%m-%d"),
-                                          datetime.strptime(f"{hour}:{minute}", "%H:%M").time())
-        )
+        clocked = ClockedSchedule.objects.filter(
+            clocked_time=datetime.datetime.combine(
+                timezone.now().date(),
+                datetime.datetime.strptime(f"{hour}:{minute}", "%H:%M").time()
+            )
+        ).first()
+
+        if clocked is None:
+            clocked = ClockedSchedule.objects.create(
+                clocked_time=datetime.datetime.combine(
+                    timezone.now().date(),
+                    datetime.datetime.strptime(f"{hour}:{minute}", "%H:%M").time()
+                )
+            )
+
+        elif not clocked.enabled:
+            clocked.enabled = True
+            clocked.save()
 
     return clocked
 
