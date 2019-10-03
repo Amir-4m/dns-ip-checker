@@ -93,8 +93,8 @@ def mtproxy_csv_import(request):
                     line = line.decode('utf-8').rstrip('\n').rstrip('\t').split(',')
                     host = line[0]
                     channel = line[1]
-                    hour = line[2]
-                    minute = line[3]
+                    hour = int(line[2])
+                    minute = int(line[3])
                     date = line[4]
                     day_of_week = line[5:]
                     proxy = MTProxy.objects.get(host=host).id
