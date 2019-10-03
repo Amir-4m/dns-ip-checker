@@ -1,8 +1,7 @@
 import json
 import logging
-import datetime
 
-from django_celery_beat.models import PeriodicTask, CrontabSchedule, ClockedSchedule
+from datetime import time
 
 from django.shortcuts import redirect
 from django.utils import timezone
@@ -11,6 +10,8 @@ from django.contrib import messages
 from django.urls import path
 from django.contrib import admin
 
+from django_celery_beat.models import PeriodicTask, CrontabSchedule, ClockedSchedule
+
 from .models import MTProxy, MTProxyStat
 from .forms import CSVPromotionAdmin
 
@@ -18,10 +19,9 @@ logger = logging.getLogger('promoter.tasks')
 
 
 def clocked_time(hour, minute, row_counter):
-    celery_beat_delay = 6
-    time = datetime.datetime.strptime(f"{hour}:{minute}:00") + datetime.timedelta(0, row_counter * celery_beat_delay)
-    datetime.datetime.combine(timezone.now().date(), time.time())
-    return time
+    return timezone.datetime.combine(
+        timezone.now().date(), time(hour, minute)
+    ) + timezone.timedelta(seconds=row_counter*6)
 
 
 def clocked_creator(hour, minute, day_of_week, date, row_counter):
@@ -41,12 +41,12 @@ def clocked_creator(hour, minute, day_of_week, date, row_counter):
                 day_of_week=day_of_week,
             )
     else:
-        time = clocked_time(hour, minute, row_counter)
+        tm = clocked_time(hour, minute, row_counter)
 
-        clocked = ClockedSchedule.objects.filter(clocked_time=time).first()
+        clocked = ClockedSchedule.objects.filter(clocked_time=tm).first()
 
         if clocked is None:
-            clocked = ClockedSchedule.objects.create(clocked_time=time)
+            clocked = ClockedSchedule.objects.create(clocked_time=tm)
 
         elif not clocked.enabled:
             clocked.enabled = True
@@ -88,7 +88,7 @@ def mtproxy_csv_import(request):
         if form.is_valid():
             csv_file = request.FILES['file'].readlines()
             counter = 0
-            for _, line in enumerate(csv_file):
+            for i, line in enumerate(csv_file):
                 try:
                     line = line.decode('utf-8').rstrip('\n').rstrip('\t').split(',')
                     host = line[0]
@@ -98,7 +98,7 @@ def mtproxy_csv_import(request):
                     date = line[4]
                     day_of_week = line[5:]
                     proxy = MTProxy.objects.get(host=host).id
-                    clocked = clocked_creator(hour, minute, day_formatter(day_of_week), date, _)
+                    clocked = clocked_creator(hour, minute, day_formatter(day_of_week), date, i)
                     p = PeriodicTask(
                         name=f"{host}, {channel}, {clocked}",
                         task="promoter.tasks.set_promotion",

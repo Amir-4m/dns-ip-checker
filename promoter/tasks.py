@@ -11,7 +11,6 @@ from django.core.cache import cache
 from .models import MTProxy, MTProxyStat
 
 logger = logging.getLogger(__name__)
-channel_logger = logging.getLogger('channel_users_count')
 
 MTPROXYBOT_CACHE_NAME = 'telegram-mtproxy-bot-lock'
 MTPROXYBOT_CACHE_TIMEOUT = 600
@@ -20,7 +19,7 @@ MTPROXYBOT_CACHE_TIMEOUT = 600
 def channel_users_count(client, channel_tag, proxy):
     try:
         users_count = client(GetFullChannelRequest(channel_tag)).full_chat.participants_count
-        channel_logger.info(f"{proxy} promoted channel: {channel_tag} users count: {users_count}")
+        logger.info(f"{proxy} promoted channel: {channel_tag} users count: {users_count}")
     except Exception as e:
         logger.error(f"getting users count failed for {channel_tag} {e}")
 
