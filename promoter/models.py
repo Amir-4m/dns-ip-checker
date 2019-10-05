@@ -1,3 +1,5 @@
+from jsonfield import JSONField
+
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
@@ -36,3 +38,18 @@ class MTProxyStat(models.Model):
 
     def __str__(self):
         return f"{self.proxy} STAT: {self.created_time}"
+
+
+class ChannelUsers(models.Model):
+    created_time = models.DateTimeField(_("created time"), auto_now_add=True)
+    updated_time = models.DateTimeField(_('updated time'), auto_now=True)
+    proxy = models.ForeignKey(MTProxy, on_delete=models.PROTECT, editable=False)
+    channel = models.CharField(_('promoted_channel'), max_length=150, editable=False)
+    statistics = JSONField(_("statistics"), editable=False)
+
+    class Meta:
+        db_table = 'mtproxy_channel_users'
+        index_together = ('proxy', 'channel')
+
+    def __str__(self):
+        return f"{self.proxy} {self.channel}"

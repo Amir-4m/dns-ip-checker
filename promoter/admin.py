@@ -12,7 +12,7 @@ from django.contrib import admin
 
 from django_celery_beat.models import PeriodicTask, CrontabSchedule, ClockedSchedule
 
-from .models import MTProxy, MTProxyStat
+from .models import MTProxy, MTProxyStat, ChannelUsers
 from .forms import CSVPromotionAdmin
 
 logger = logging.getLogger('promoter.tasks')
@@ -21,7 +21,7 @@ logger = logging.getLogger('promoter.tasks')
 def clocked_time(hour, minute, row_counter):
     return timezone.datetime.combine(
         timezone.now().date(), time(hour, minute)
-    ) + timezone.timedelta(seconds=row_counter*6)
+    ) + timezone.timedelta(seconds=row_counter * 6)
 
 
 def clocked_creator(hour, minute, day_of_week, date, row_counter):
@@ -82,6 +82,7 @@ def day_formatter(day_list):
 
 
 def mtproxy_csv_import(request):
+    # TODO list of proxies for channel and splitlines the data
     form = CSVPromotionAdmin()
     if request.method == 'POST':
         form = CSVPromotionAdmin(request.POST, request.FILES)
@@ -100,7 +101,7 @@ def mtproxy_csv_import(request):
                     proxy = MTProxy.objects.get(host=host).id
                     clocked = clocked_creator(hour, minute, day_formatter(day_of_week), date, i)
                     p = PeriodicTask(
-                        name=f"{host}, {channel}, {clocked}",
+                        name=f"{host}, {channel}",
                         task="promoter.tasks.set_promotion",
                         one_off=date != "*",
                         queue="telegram-mtproxy-bot",
@@ -116,7 +117,7 @@ def mtproxy_csv_import(request):
                     counter += 1
 
                 except Exception as e:
-                    logger.error(f"PeriodicTask creation failed for record: {line.decode('utf-8')} {e}")
+                    logger.error(f"PeriodicTask creation failed for record: {line} {e}")
 
             messages.success(request, f"{counter} periodic tasks created successfully")
             return redirect('admin:django_celery_beat_periodictask_changelist')
@@ -152,3 +153,9 @@ class MTProxyStatAdmin(admin.ModelAdmin):
 
     def proxy(self, obj):
         return obj.proxy
+
+
+@admin.register(ChannelUsers)
+class ChannelUsersAdmin(admin.ModelAdmin):
+    list_filter = ["created_time", "proxy__host", "channel"]
+    search_fields = ["channel", "proxy__host"]
