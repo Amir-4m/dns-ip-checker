@@ -16,10 +16,22 @@ MTPROXYBOT_CACHE_NAME = 'telegram-mtproxy-bot-lock'
 MTPROXYBOT_CACHE_TIMEOUT = 600
 
 
-def channel_users_count(client, channel_tag, proxy_id):
+def channel_users_count(client, channel_tag, proxy_id=None):
     try:
-        # can create and update ChannelUsers model here
-        return client(GetFullChannelRequest(channel_tag)).full_chat.participants_count
+        count = client(GetFullChannelRequest(channel_tag)).full_chat.participants_count
+        if proxy_id:
+            ChannelUsers.objects.create(
+                channel=channel_tag,
+                proxy_id=proxy_id,
+                statistics={"created_log": count}
+            )
+            return
+
+        # update
+        log = ChannelUsers.objects.filter(channel=channel_tag).last()
+        log.statistics['updated_log'] = count
+        log.save()
+
     except Exception as e:
         logger.error(f"getting users count failed for {channel_tag} {e}")
 
@@ -67,8 +79,8 @@ def find_proxy_in_pages(client, host, page=None):
                     res.id,
                     data=bytes(f"proxies/{button_number}", 'utf-8'),
                 ))
-
                 try:
+                    # save last promoted channel before change
                     promoted_channel = client.get_messages('@MTProxybot')[0].entities[2].url.split('/')[-1]
                     cache.set(host, f"@{promoted_channel}")
                 except Exception as e:
@@ -144,53 +156,42 @@ def delete_proxy(session, api_id, api_hash, host, port):
 
 
 @shared_task(queue='telegram-mtproxy-bot')
-def set_promotion(proxy_id, channel):
+def set_promotion(proxies, channel):
     while cache.get(MTPROXYBOT_CACHE_NAME):
         sleep(1)
 
     cache.set(MTPROXYBOT_CACHE_NAME, True, MTPROXYBOT_CACHE_TIMEOUT)
 
-    # filter by host
+    for proxy_host in proxies:
+        try:
+            proxy = MTProxy.objects.get(host=proxy_host)
 
-    proxy = MTProxy.objects.get(id=proxy_id)
+            with TelegramClient(proxy.owner.session, proxy.owner.api_id, proxy.owner.api_hash) as client:
+                client.send_message('MTProxybot', '/myproxies')
+                sleep(0.5)
 
-    try:
-        with TelegramClient(proxy.owner.session, proxy.owner.api_id, proxy.owner.api_hash) as client:
-            client.send_message('MTProxybot', '/myproxies')
-            sleep(0.5)
+                to_id, msg_id, button_number = find_proxy_in_pages(client, proxy.host)
 
-            to_id, msg_id, button_number = find_proxy_in_pages(client, proxy.host)
+                previous_channel = cache.get(proxy.host)
+                if previous_channel:
+                    channel_users_count(client, previous_channel)  # update ChannelUsers
+                    cache.delete(proxy.host)
 
-            previous_channel = cache.get(proxy.host)
-            if previous_channel is not None:
-                count = channel_users_count(client, previous_channel, proxy)
-                # TODO update UserCountLog filter by channel and get last one
-                log_to_update = ChannelUsers.objects.filter(channel=previous_channel).last()
-                log_to_update.statistics["update_log"] = count
-                log_to_update.save()
+                client(GetBotCallbackAnswerRequest(
+                    to_id,
+                    msg_id,
+                    data=bytes(f"proxies/{button_number}/edit/promo", 'utf-8'),
+                ))
+                client.send_message('MTProxybot', channel)
+                logger.info(f"{proxy.host}:{proxy.port} SET FOR {channel}.")
 
-                cache.delete(proxy.host)
+                channel_users_count(client, channel, proxy.id)  # create ChannelUsers
 
-            client(GetBotCallbackAnswerRequest(
-                to_id,
-                msg_id,
-                data=bytes(f"proxies/{button_number}/edit/promo", 'utf-8'),
-            ))
-            client.send_message('MTProxybot', channel)
-            logger.info(f"{proxy.host}:{proxy.port} SET FOR {channel}.")
+        except MTProxy.DoesNotExist():
+            logger.error(f"{proxy_host} not match query in MTProxy objects")
 
-            count = channel_users_count(client, channel, proxy)
-
-            # TODO create UserCountLog
-            ChannelUsers.objects.create(
-                proxy=proxy,
-                channel=channel,
-                statistics={"created_log": count},
-            )
-
-    except Exception as e:
-        logger.error(
-            f"{proxy.host}:{proxy.port} NOT SET FOR {channel}\n{e}.")
+        except Exception as e:
+            logger.error(f"{proxy_host} NOT SET FOR {channel} {e}.")
 
     cache.delete(MTPROXYBOT_CACHE_NAME)
 

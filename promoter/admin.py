@@ -1,4 +1,5 @@
 import json
+import csv
 import logging
 
 from datetime import time
@@ -82,31 +83,28 @@ def day_formatter(day_list):
 
 
 def mtproxy_csv_import(request):
-    # TODO list of proxies for channel and splitlines the data
     form = CSVPromotionAdmin()
     if request.method == 'POST':
         form = CSVPromotionAdmin(request.POST, request.FILES)
         if form.is_valid():
-            csv_file = request.FILES['file'].readlines()
+            csv_file = csv.reader(request.FILES['file'].read().decode('utf-8').splitlines())
             counter = 0
-            for i, line in enumerate(csv_file):
+            for i, row in enumerate(csv_file):
                 try:
-                    line = line.decode('utf-8').rstrip('\n').rstrip('\t').split(',')
-                    host = line[0]
-                    channel = line[1]
-                    hour = int(line[2])
-                    minute = int(line[3])
-                    date = line[4]
-                    day_of_week = line[5:]
-                    proxy = MTProxy.objects.get(host=host).id
+                    channel = row[0]
+                    proxies = row[1].split(',')  # list of proxies
+                    hour = int(row[2])
+                    minute = int(row[3])
+                    date = row[4]
+                    day_of_week = row[5]
                     clocked = clocked_creator(hour, minute, day_formatter(day_of_week), date, i)
                     p = PeriodicTask(
-                        name=f"{host}, {channel}",
+                        name=channel,
                         task="promoter.tasks.set_promotion",
                         one_off=date != "*",
                         queue="telegram-mtproxy-bot",
                         start_time=timezone.now(),
-                        args=json.dumps([proxy, channel]),
+                        args=json.dumps([proxies, channel]),
                     )
                     if date == '*':
                         p.crontab = clocked
@@ -117,7 +115,7 @@ def mtproxy_csv_import(request):
                     counter += 1
 
                 except Exception as e:
-                    logger.error(f"PeriodicTask creation failed for record: {line} {e}")
+                    logger.error(f"PeriodicTask creation failed for record: {row} {e}")
 
             messages.success(request, f"{counter} periodic tasks created successfully")
             return redirect('admin:django_celery_beat_periodictask_changelist')
@@ -159,3 +157,14 @@ class MTProxyStatAdmin(admin.ModelAdmin):
 class ChannelUsersAdmin(admin.ModelAdmin):
     list_filter = ["created_time", "proxy__host", "channel"]
     search_fields = ["channel", "proxy__host"]
+
+    # is needed when editable False ??
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
