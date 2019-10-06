@@ -26,7 +26,7 @@ class MTProxy(models.Model):
 
 class MTProxyStat(models.Model):
     created_time = models.DateTimeField(_("created_time"), auto_now_add=True, db_index=True)
-    promoted_channel = models.CharField(_("info"), max_length=150)
+    promoted_channel = models.CharField(_("info"), max_length=50)
     proxy = models.ForeignKey(MTProxy, on_delete=models.PROTECT)
     stat_message = models.TextField(_("stat_message"), blank=True)
     number_of_users = models.PositiveIntegerField(_("user connected"), null=True)
