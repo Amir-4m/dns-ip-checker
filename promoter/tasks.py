@@ -8,7 +8,7 @@ from telethon.tl.functions.channels import GetFullChannelRequest
 
 from django.core.cache import cache
 
-from .models import MTProxy, MTProxyStat, ChannelUsers
+from .models import MTProxy, MTProxyStat, ChannelUserStat
 
 logger = logging.getLogger(__name__)
 
@@ -16,21 +16,22 @@ MTPROXYBOT_CACHE_NAME = 'telegram-mtproxy-bot-lock'
 MTPROXYBOT_CACHE_TIMEOUT = 600
 
 
-def channel_users_count(client, channel_tag, proxy_id=None):
+def channel_users_count(client, channel_tag, proxy_id, update=False):
     try:
         count = client(GetFullChannelRequest(channel_tag)).full_chat.participants_count
-        if proxy_id:
-            ChannelUsers.objects.create(
+        if update:
+            cus = ChannelUserStat.objects.filter(
                 channel=channel_tag,
                 proxy_id=proxy_id,
-                statistics={"created_log": count}
+            ).last()
+            cus.statistics['ceased_count'] = count
+            cus.save()
+        else:
+            ChannelUserStat.objects.create(
+                channel=channel_tag,
+                proxy_id=proxy_id,
+                statistics={"started_count": count}
             )
-            return
-
-        # update
-        log = ChannelUsers.objects.filter(channel=channel_tag).last()
-        log.statistics['updated_log'] = count
-        log.save()
 
     except Exception as e:
         logger.error(f"getting users count failed for {channel_tag} {e}")
@@ -172,10 +173,12 @@ def set_promotion(proxies, channel):
 
                 to_id, msg_id, button_number = find_proxy_in_pages(client, proxy.host)
 
-                previous_channel = cache.get(proxy.host)
+                ck = f'mtproxy_channel_promotion_{proxy.id}'
+
+                previous_channel = cache.get(ck)
                 if previous_channel:
-                    channel_users_count(client, previous_channel)  # update ChannelUsers
-                    cache.delete(proxy.host)
+                    channel_users_count(client, previous_channel, proxy.id, update=True)  # update ChannelUserStat
+                    cache.delete(ck)
 
                 client(GetBotCallbackAnswerRequest(
                     to_id,
@@ -185,7 +188,8 @@ def set_promotion(proxies, channel):
                 client.send_message('MTProxybot', channel)
                 logger.info(f"{proxy.host}:{proxy.port} SET FOR {channel}.")
 
-                channel_users_count(client, channel, proxy.id)  # create ChannelUsers
+                channel_users_count(client, channel, proxy.id)  # create ChannelUserStat
+                cache.set(ck, channel, 60*60*24*7)  # keep cache for one week
 
         except MTProxy.DoesNotExist():
             logger.error(f"{proxy_host} not match query in MTProxy objects")
