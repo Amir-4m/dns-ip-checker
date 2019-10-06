@@ -8,6 +8,7 @@ class MTProxy(models.Model):
     created_time = models.DateTimeField(_("created time"), auto_now_add=True)
     updated_time = models.DateTimeField(_('updated time'), auto_now=True)
     owner = models.ForeignKey('tel_tools.TelegramUser', on_delete=models.PROTECT)
+    slug = models.SlugField(_('slug'), unique=True, allow_unicode=False)
     host = models.CharField(max_length=50, db_index=True)
     port = models.IntegerField(db_index=True)
     secret_key = models.CharField(max_length=32)
@@ -21,7 +22,7 @@ class MTProxy(models.Model):
         verbose_name_plural = _('MTProto proxies')
 
     def __str__(self):
-        return f"{self.host}:{self.port}"
+        return self.slug
 
 
 class MTProxyStat(models.Model):

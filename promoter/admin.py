@@ -92,7 +92,7 @@ def mtproxy_csv_import(request):
             for i, row in enumerate(csv_file):
                 try:
                     channel = row[0]
-                    proxies = row[1].split(',')  # list of proxies
+                    proxies = [x.strip() for x in row[1].split(',')]  # list of proxies
                     hour = int(row[2])
                     minute = int(row[3])
                     date = row[4]
@@ -138,8 +138,8 @@ class MTProxyAdmin(admin.ModelAdmin):
 @admin.register(MTProxyStat)
 class MTProxyStatAdmin(admin.ModelAdmin):
     list_display = ['proxy', 'promoted_channel', 'created_time', 'number_of_users']
-    list_filter = ['proxy__host', 'proxy__port', 'promoted_channel']
-    search_fields = ["promoted_channel", "proxy__host"]
+    list_filter = ['proxy__slug', 'promoted_channel']
+    search_fields = ["promoted_channel", "proxy__slug", "proxy__host"]
     list_per_page = 500
 
     def has_add_permission(self, request):
@@ -155,8 +155,8 @@ class MTProxyStatAdmin(admin.ModelAdmin):
 @admin.register(ChannelUserStat)
 class ChannelUserStatAdmin(admin.ModelAdmin):
     list_display = ["channel", "proxy", "created_time", "statistics"]
-    list_filter = ["created_time", "proxy__host", "proxy__port", "channel"]
-    search_fields = ["channel", "proxy__host"]
+    list_filter = ["created_time", "proxy__slug", "channel"]
+    search_fields = ["channel", "proxy__slug", "proxy__host"]
     list_per_page = 500
 
     def has_add_permission(self, request):

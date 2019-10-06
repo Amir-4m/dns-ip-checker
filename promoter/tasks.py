@@ -165,7 +165,7 @@ def set_promotion(proxies, channel):
 
     for proxy_host in proxies:
         try:
-            proxy = MTProxy.objects.get(host=proxy_host)
+            proxy = MTProxy.objects.get(slug=proxy_host)
 
             with TelegramClient(proxy.owner.session, proxy.owner.api_id, proxy.owner.api_hash) as client:
                 client.send_message('MTProxybot', '/myproxies')
@@ -191,7 +191,7 @@ def set_promotion(proxies, channel):
                 channel_users_count(client, channel, proxy.id)  # create ChannelUserStat
                 cache.set(ck, channel, 60*60*24*7)  # keep cache for one week
 
-        except MTProxy.DoesNotExist():
+        except MTProxy.DoesNotExist:
             logger.error(f"{proxy_host} not match query in MTProxy objects")
 
         except Exception as e:
