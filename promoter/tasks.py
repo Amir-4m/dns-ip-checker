@@ -23,14 +23,16 @@ def channel_users_count(client, channel_tag, proxy_id, update=False):
             cus = ChannelUserStat.objects.filter(
                 channel=channel_tag,
                 proxy_id=proxy_id,
+                users_sp__isnull=False,
+                users_ep__isnull=True,
             ).last()
-            cus.statistics['ceased_count'] = count
+            cus.users_ep = count
             cus.save()
         else:
             ChannelUserStat.objects.create(
                 channel=channel_tag,
                 proxy_id=proxy_id,
-                statistics={"started_count": count}
+                users_sp=count
             )
 
     except Exception as e:
@@ -54,7 +56,7 @@ def find_proxy(proxy):
             stat_text = client.get_messages('MTProxybot')[0].message
 
     except Exception as e:
-        logger.error(f"[{proxy.host} error: {e}")
+        logger.error(f"{proxy.host} error: {e}")
 
     return stat_text
 
@@ -242,7 +244,7 @@ def get_proxies_stat():
         logger.info(f'get stat for {proxy.host}')
         try:
             stat_text = find_proxy(proxy)
-            stat = (stat_text.split('\n')[11][11:]).replace(" ", "")
+            stat = stat_text[stat_text.index("Hourly stats:"):].splitlines()[2][11:].replace(" ", "")
             logger.info(f"{proxy.host} result: {stat}")
             number_of_users = int(stat)
 

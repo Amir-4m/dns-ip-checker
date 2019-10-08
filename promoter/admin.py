@@ -92,7 +92,7 @@ def mtproxy_csv_import(request):
             for i, row in enumerate(csv_file):
                 try:
                     channel = row[0]
-                    proxies = [x.strip() for x in row[1].split(',')]  # list of proxies
+                    slugs = [x.strip() for x in row[1].split(',')]  # list of slugs
                     hour = int(row[2])
                     minute = int(row[3])
                     date = row[4]
@@ -104,7 +104,7 @@ def mtproxy_csv_import(request):
                         one_off=date != "*",
                         queue="telegram-mtproxy-bot",
                         start_time=timezone.now(),
-                        args=json.dumps([proxies, channel]),
+                        args=json.dumps([slugs, channel]),
                     )
                     if date == '*':
                         p.crontab = clocked
@@ -154,9 +154,9 @@ class MTProxyStatAdmin(admin.ModelAdmin):
 
 @admin.register(ChannelUserStat)
 class ChannelUserStatAdmin(admin.ModelAdmin):
-    list_display = ["channel", "proxy", "created_time", "statistics"]
-    list_filter = ["created_time", "proxy__slug", "channel"]
-    search_fields = ["channel", "proxy__slug", "proxy__host"]
+    list_display = ["channel", "created_time", "users_sp", "users_ep"]
+    list_filter = ["created_time", "channel"]
+    search_fields = ["channel", "created_time"]
     list_per_page = 500
 
     def has_add_permission(self, request):
