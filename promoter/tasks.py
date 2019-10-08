@@ -157,15 +157,15 @@ def delete_proxy(session, api_id, api_hash, host, port):
 
 
 @shared_task(queue='telegram-mtproxy-bot')
-def set_promotion(proxies, channel):
+def set_promotion(slugs, channel):
     while cache.get(MTPROXYBOT_CACHE_NAME):
         sleep(1)
 
     cache.set(MTPROXYBOT_CACHE_NAME, True, MTPROXYBOT_CACHE_TIMEOUT)
 
-    for proxy_host in proxies:
+    for slug in slugs:
         try:
-            proxy = MTProxy.objects.get(slug=proxy_host)
+            proxy = MTProxy.objects.get(slug=slug)
 
             with TelegramClient(proxy.owner.session, proxy.owner.api_id, proxy.owner.api_hash) as client:
                 client.send_message('MTProxybot', '/myproxies')
@@ -192,10 +192,10 @@ def set_promotion(proxies, channel):
                 cache.set(ck, channel, 60*60*24*7)  # keep cache for one week
 
         except MTProxy.DoesNotExist:
-            logger.error(f"{proxy_host} not match query in MTProxy objects")
+            logger.error(f"{slug} not match query in MTProxy objects")
 
         except Exception as e:
-            logger.error(f"{proxy_host} NOT SET FOR {channel} {e}.")
+            logger.error(f"{slug} NOT SET FOR {channel} {e}.")
 
     cache.delete(MTPROXYBOT_CACHE_NAME)
 

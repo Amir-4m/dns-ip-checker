@@ -45,16 +45,15 @@ class MTProxyStat(models.Model):
 class ChannelUserStat(models.Model):
     created_time = models.DateTimeField(_("created time"), auto_now_add=True, db_index=True)
     updated_time = models.DateTimeField(_('updated time'), auto_now=True)
-    proxy = models.ForeignKey(MTProxy, on_delete=models.PROTECT, editable=False)
-    channel = models.CharField(_('promoted_channel'), max_length=150, editable=False)
-    statistics = JSONField(_("statistics"), editable=False)
+    channel = models.CharField(_('promoted_channel'), max_length=150, editable=False, db_index=True)
+    users_sp = models.IntegerField(editable=False, null=True)
+    users_ep = models.IntegerField(editable=False, null=True)
 
     class Meta:
         db_table = 'mtproxy_channel_stats'
-        index_together = ('proxy', 'channel')
         ordering = ('-id',)
         verbose_name = _('stat of channel')
         verbose_name_plural = _('stat of channels')
 
     def __str__(self):
-        return f"{self.proxy} {self.channel}"
+        return f"{self.channel} before promotion: {self.users_ep} after promotion: {self.users_sp}"
