@@ -1,5 +1,3 @@
-from jsonfield import JSONField
-
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
@@ -56,4 +54,4 @@ class ChannelUserStat(models.Model):
         verbose_name_plural = _('stat of channels')
 
     def __str__(self):
-        return f"{self.channel} before promotion: {self.users_ep} after promotion: {self.users_sp}"
+        return f"{self.channel} before promotion: {self.users_sp} after promotion: {self.users_ep}"
