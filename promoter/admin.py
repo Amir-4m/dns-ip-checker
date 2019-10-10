@@ -160,7 +160,7 @@ class ChannelUserStatAdmin(admin.ModelAdmin):
     list_per_page = 500
 
     def proxies(self, obj):
-        return ",".join(stat.proxy.slug for stat in obj.channelstatproxy_set.all())
+        return ",".join(stat.proxy.slug for stat in obj.channelstatproxy_set.select_related('proxy').all())
 
     def has_add_permission(self, request):
         return False
