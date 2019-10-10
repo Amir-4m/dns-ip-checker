@@ -99,7 +99,7 @@ def mtproxy_csv_import(request):
                     day_of_week = row[5]
                     clocked = clocked_creator(hour, minute, day_formatter(day_of_week), date, i)
                     p = PeriodicTask(
-                        name=channel,
+                        name=f'{channel}-{timezone.now().strftime("%Y%m%d%H%M%S")}',
                         task="promoter.tasks.set_promotion",
                         one_off=date != "*",
                         queue="telegram-mtproxy-bot",
