@@ -17,8 +17,9 @@ def confirm_number(request, api_id):
             if form.is_valid():
                 data = form.cleaned_data
                 code = data.get('code')
-                api_id, api_hash, number = cache.get(f'telegram_userinfo_{api_id}')
-                login.delay(api_id, api_hash, number, code)
+                api_id, api_hash, number, password = cache.get(f'telegram_userinfo_{api_id}')
+                login.delay(api_id, api_hash, number, code, password)
+                cache.delete(f'telegram_userinfo_{api_id}')  # don't have any expiration time before is needed to delete?
                 messages.info(request, _('please check your saved message and reload the page'))
                 return redirect('admin:tel_tools_telegramuser_changelist')
 
