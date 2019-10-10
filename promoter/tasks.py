@@ -16,25 +16,31 @@ MTPROXYBOT_CACHE_NAME = 'telegram-mtproxy-bot-lock'
 MTPROXYBOT_CACHE_TIMEOUT = 600
 
 
-def channel_users_count(client, channel_tag, proxy, update=False):
+def channel_users_count(client, channel_tag, proxy, create=False):
     try:
         count = client(GetFullChannelRequest(channel_tag)).full_chat.participants_count
 
-        cus = ChannelUserStat.objects.filter(
-            channel=channel_tag,
-            users_ep__isnull=True,
-        ).last()
+        if create:
+            cus, created = ChannelUserStat.objects.get_or_create(
+                channel=channel_tag,
+                users_ep=None,
+                defaults=dict(users_sp=count)
+            )
 
-        # !!! DO NOT AND THE CONDITIONS
-        if update and cus:
-            cus.users_ep = count
-            cus.save()
-
-        if not update:
-            if cus is None:
-                cus = ChannelUserStat.objects.create(channel=channel_tag, users_sp=count)
+            if created:
+                cache.set(f'channel_promoted_{cus.id}', True, 60 * 10)
 
             ChannelStatProxy.objects.create(channel_stat=cus, proxy=proxy)
+
+        else:
+            cus = ChannelUserStat.objects.filter(
+                channel=channel_tag,
+                users_ep__isnull=True,
+            ).last()
+
+            if cus and not cache.get(f'channel_promoted_{cus.id}'):
+                cus.users_ep = count
+                cus.save()
 
     except Exception as e:
         logger.error(f"getting users count failed for {channel_tag} {e}")
@@ -176,8 +182,7 @@ def set_promotion(slugs, channel):
 
                 to_id, msg_id, button_number, previous_channel = find_proxy_in_pages(client, proxy.host)
 
-                if previous_channel:
-                    channel_users_count(client, previous_channel, proxy, update=True)  # update ChannelUserStat
+                channel_users_count(client, previous_channel, proxy)  # update ChannelUserStat
 
                 client(GetBotCallbackAnswerRequest(
                     to_id,
@@ -187,7 +192,7 @@ def set_promotion(slugs, channel):
                 client.send_message('MTProxybot', channel)
                 logger.info(f"{proxy.host}:{proxy.port} SET FOR {channel}.")
 
-                channel_users_count(client, channel, proxy)  # create ChannelUserStat users_sp
+                channel_users_count(client, channel, proxy, create=True)  # create ChannelUserStat users_sp
 
         except MTProxy.DoesNotExist:
             logger.error(f"{slug} not match query in MTProxy objects")

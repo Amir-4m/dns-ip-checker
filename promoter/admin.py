@@ -103,7 +103,7 @@ def mtproxy_csv_import(request):
                         task="promoter.tasks.set_promotion",
                         one_off=date != "*",
                         queue="telegram-mtproxy-bot",
-                        start_time=timezone.now(),
+                        # start_time=timezone.now(),
                         args=json.dumps([slugs, channel]),
                     )
                     if date == '*':
