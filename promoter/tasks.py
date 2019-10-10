@@ -19,6 +19,7 @@ MTPROXYBOT_CACHE_TIMEOUT = 600
 def channel_users_count(client, channel_tag, update=False):
     try:
         count = client(GetFullChannelRequest(channel_tag)).full_chat.participants_count
+
         cus = ChannelUserStat.objects.filter(
             channel=channel_tag,
             users_ep__isnull=True,
@@ -43,7 +44,7 @@ def find_proxy(proxy):
             client.send_message('MTProxybot', '/myproxies')
             sleep(0.5)
 
-            to_id, msg_id, button_number = find_proxy_in_pages(client, proxy.host)
+            to_id, msg_id, button_number, channel = find_proxy_in_pages(client, proxy.host)
 
             client(GetBotCallbackAnswerRequest(
                 to_id,
@@ -55,7 +56,7 @@ def find_proxy(proxy):
     except Exception as e:
         logger.error(f"{proxy.host} error: {e}")
 
-    return stat_text
+    return stat_text, channel
 
 
 def find_proxy_in_pages(client, host, page=None):
@@ -79,6 +80,7 @@ def find_proxy_in_pages(client, host, page=None):
                     res.id,
                     data=bytes(f"proxies/{button_number}", 'utf-8'),
                 ))
+                promoted_channel = None
                 try:
                     # save last promoted channel before change
                     promoted_channel = client.get_messages('@MTProxybot')[0].entities[2].url.split('/')[-1]
@@ -86,7 +88,7 @@ def find_proxy_in_pages(client, host, page=None):
                 except Exception as e:
                     logger.error(f"getting previous channel failed for {host} {e}")
 
-                return res.to_id, res.id, button_number
+                return res.to_id, res.id, button_number, promoted_channel
             if button.text == '»':
                 return find_proxy_in_pages(client, host, page=button.data)
 
@@ -134,7 +136,7 @@ def delete_proxy(session, api_id, api_hash, host, port):
             client.send_message('MTProxybot', '/myproxies')
             sleep(0.5)
 
-            to_id, msg_id, button_number = find_proxy_in_pages(client, host)
+            to_id, msg_id, button_number, channel = find_proxy_in_pages(client, host)
 
             client(GetBotCallbackAnswerRequest(
                 to_id,
@@ -170,14 +172,10 @@ def set_promotion(slugs, channel):
                 client.send_message('MTProxybot', '/myproxies')
                 sleep(0.5)
 
-                to_id, msg_id, button_number = find_proxy_in_pages(client, proxy.host)
+                to_id, msg_id, button_number, previous_channel = find_proxy_in_pages(client, proxy.host)
 
-                ck = f'mtproxy_channel_promotion_{proxy.id}'
-
-                previous_channel = cache.get(ck)
                 if previous_channel:
                     channel_users_count(client, previous_channel, update=True)  # update ChannelUserStat
-                    cache.delete(ck)
 
                 client(GetBotCallbackAnswerRequest(
                     to_id,
@@ -188,7 +186,6 @@ def set_promotion(slugs, channel):
                 logger.info(f"{proxy.host}:{proxy.port} SET FOR {channel}.")
 
                 channel_users_count(client, channel)  # create ChannelUserStat users_sp
-                cache.set(ck, channel, 60*60*24*7)  # keep cache for one week
 
         except MTProxy.DoesNotExist:
             logger.error(f"{slug} not match query in MTProxy objects")
@@ -212,7 +209,7 @@ def remove_promotion(proxy_id):
             client.send_message('MTProxybot', '/myproxies')
             sleep(0.5)
 
-            to_id, msg_id, button_number = find_proxy_in_pages(client, proxy.host)
+            to_id, msg_id, button_number, channel = find_proxy_in_pages(client, proxy.host)
 
             client(GetBotCallbackAnswerRequest(
                 to_id,
@@ -240,13 +237,13 @@ def get_proxies_stat():
     for proxy in proxies:
         logger.info(f'get stat for {proxy.host}')
         try:
-            stat_text = find_proxy(proxy)
+            stat_text, channel = find_proxy(proxy)
             stat = stat_text[stat_text.index("Hourly stats:"):].splitlines()[2][11:].replace(" ", "")
             logger.info(f"{proxy.host} result: {stat}")
             number_of_users = int(stat)
 
             MTProxyStat.objects.using('telegram-mtproxy-bot').create(
-                promoted_channel=(cache.get(proxy.host) or ''),
+                promoted_channel=channel or '',
                 proxy=proxy,
                 stat_message=stat_text,
                 number_of_users=number_of_users,

@@ -125,7 +125,7 @@ def mtproxy_csv_import(request):
 
 @admin.register(MTProxy)
 class MTProxyAdmin(admin.ModelAdmin):
-    list_display = ['host', 'port', 'is_enable', 'secret_key', 'proxy_tag']
+    list_display = ['slug', 'host', 'port', 'is_enable', 'secret_key', 'proxy_tag']
     list_filter = ['is_enable', 'owner']
     search_fields = ['id', 'host', 'proxy_tag', 'secret_key']
 
