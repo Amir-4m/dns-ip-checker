@@ -47,6 +47,7 @@ class ChannelUserStat(models.Model):
                                    help_text=_('# of channel users before proxy promotion'))
     users_ep = models.IntegerField(_('ending promotion'), null=True,
                                    help_text=_('# of channel users when proxy promotion ends'))
+    proxies = models.TextField()
 
     class Meta:
         db_table = 'mtproxy_channel_stats'
