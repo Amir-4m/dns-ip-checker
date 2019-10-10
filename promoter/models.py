@@ -15,7 +15,6 @@ class MTProxy(models.Model):
 
     class Meta:
         db_table = 'mtproxy_proxy'
-        unique_together = ('host', 'port')
         verbose_name = _('MTProto proxy')
         verbose_name_plural = _('MTProto proxies')
 
