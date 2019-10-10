@@ -13,7 +13,7 @@ from django.contrib import admin
 
 from django_celery_beat.models import PeriodicTask, CrontabSchedule, ClockedSchedule
 
-from .models import MTProxy, MTProxyStat, ChannelUserStat
+from .models import MTProxy, MTProxyStat, ChannelUserStat, ChannelStatProxy
 from .forms import CSVPromotionAdmin
 
 logger = logging.getLogger('promoter.tasks')
@@ -154,10 +154,13 @@ class MTProxyStatAdmin(admin.ModelAdmin):
 
 @admin.register(ChannelUserStat)
 class ChannelUserStatAdmin(admin.ModelAdmin):
-    list_display = ["channel", "created_time", "users_sp", "users_ep"]
+    list_display = ["channel", "created_time", "users_sp", "users_ep", "proxies"]
     list_filter = ["created_time", "channel"]
     search_fields = ["channel"]
     list_per_page = 500
+
+    def proxies(self, obj):
+        return ",".join(stat.proxy.slug for stat in obj.channelstatproxy_set.all())
 
     def has_add_permission(self, request):
         return False
