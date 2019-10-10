@@ -56,3 +56,15 @@ class ChannelUserStat(models.Model):
 
     def __str__(self):
         return f"{self.channel} - {self.created_time}"
+
+
+class ChannelStatProxy(models.Model):
+    created_time = models.DateTimeField(_("created time"), auto_now_add=True)
+    channel_stat = models.ForeignKey(ChannelUserStat, on_delete=models.PROTECT)
+    proxy = models.ForeignKey(MTProxy, on_delete=models.PROTECT)
+
+    class Meta:
+        db_table = 'mtproxy_channel_stats_proxies'
+
+    def __str__(self):
+        return f"{self.channel_stat.channel} {self.proxy}"

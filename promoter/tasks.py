@@ -8,7 +8,7 @@ from telethon.tl.functions.channels import GetFullChannelRequest
 
 from django.core.cache import cache
 
-from .models import MTProxy, MTProxyStat, ChannelUserStat
+from .models import MTProxy, MTProxyStat, ChannelUserStat, ChannelStatProxy
 
 logger = logging.getLogger(__name__)
 
@@ -34,8 +34,7 @@ def channel_users_count(client, channel_tag, proxy, update=False):
             if cus is None:
                 cus = ChannelUserStat.objects.create(channel=channel_tag, users_sp=count)
 
-            # cus.add relation with proxy
-
+            ChannelStatProxy.objects.create(channel_stat=cus, proxy=proxy)
 
     except Exception as e:
         logger.error(f"getting users count failed for {channel_tag} {e}")
