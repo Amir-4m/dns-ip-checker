@@ -138,7 +138,7 @@ class MTProxyAdmin(admin.ModelAdmin):
 @admin.register(MTProxyStat)
 class MTProxyStatAdmin(admin.ModelAdmin):
     list_display = ['proxy', 'promoted_channel', 'created_time', 'number_of_users']
-    list_filter = ['proxy__slug', 'promoted_channel']
+    list_filter = ['proxy', 'promoted_channel']
     search_fields = ["promoted_channel", "proxy__slug", "proxy__host"]
     list_per_page = 500
 
@@ -156,7 +156,7 @@ class MTProxyStatAdmin(admin.ModelAdmin):
 class ChannelUserStatAdmin(admin.ModelAdmin):
     list_display = ["channel", "created_time", "users_sp", "users_ep"]
     list_filter = ["created_time", "channel"]
-    search_fields = ["channel", "created_time"]
+    search_fields = ["channel"]
     list_per_page = 500
 
     def has_add_permission(self, request):
