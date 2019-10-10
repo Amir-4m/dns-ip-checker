@@ -1,5 +1,3 @@
-from jsonfield import JSONField
-
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
@@ -8,6 +6,7 @@ class MTProxy(models.Model):
     created_time = models.DateTimeField(_("created time"), auto_now_add=True)
     updated_time = models.DateTimeField(_('updated time'), auto_now=True)
     owner = models.ForeignKey('tel_tools.TelegramUser', on_delete=models.PROTECT)
+    slug = models.SlugField(_('slug'), unique=True, allow_unicode=False)
     host = models.CharField(max_length=50, db_index=True)
     port = models.IntegerField(db_index=True)
     secret_key = models.CharField(max_length=32)
@@ -21,7 +20,7 @@ class MTProxy(models.Model):
         verbose_name_plural = _('MTProto proxies')
 
     def __str__(self):
-        return f"{self.host}:{self.port}"
+        return self.slug
 
 
 class MTProxyStat(models.Model):
@@ -44,16 +43,17 @@ class MTProxyStat(models.Model):
 class ChannelUserStat(models.Model):
     created_time = models.DateTimeField(_("created time"), auto_now_add=True, db_index=True)
     updated_time = models.DateTimeField(_('updated time'), auto_now=True)
-    proxy = models.ForeignKey(MTProxy, on_delete=models.PROTECT, editable=False)
-    channel = models.CharField(_('promoted_channel'), max_length=150, editable=False)
-    statistics = JSONField(_("statistics"), editable=False)
+    channel = models.CharField(_('promoted_channel'), max_length=150, db_index=True)
+    users_sp = models.IntegerField(_('before promotion'), null=True,
+                                   help_text=_('# of channel users before proxy promotion'))
+    users_ep = models.IntegerField(_('ending promotion'), null=True,
+                                   help_text=_('# of channel users when proxy promotion ends'))
 
     class Meta:
         db_table = 'mtproxy_channel_stats'
-        index_together = ('proxy', 'channel')
         ordering = ('-id',)
         verbose_name = _('stat of channel')
         verbose_name_plural = _('stat of channels')
 
     def __str__(self):
-        return f"{self.proxy} {self.channel}"
+        return f"{self.channel} - {self.created_time}"

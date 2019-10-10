@@ -16,22 +16,21 @@ MTPROXYBOT_CACHE_NAME = 'telegram-mtproxy-bot-lock'
 MTPROXYBOT_CACHE_TIMEOUT = 600
 
 
-def channel_users_count(client, channel_tag, proxy_id, update=False):
+def channel_users_count(client, channel_tag, update=False):
     try:
         count = client(GetFullChannelRequest(channel_tag)).full_chat.participants_count
-        if update:
-            cus = ChannelUserStat.objects.filter(
-                channel=channel_tag,
-                proxy_id=proxy_id,
-            ).last()
-            cus.statistics['ceased_count'] = count
+        cus = ChannelUserStat.objects.filter(
+            channel=channel_tag,
+            users_ep__isnull=True,
+        ).last()
+
+        # !!! DO NOT AND THE CONDITIONS
+        if update and cus:
+            cus.users_ep = count
             cus.save()
-        else:
-            ChannelUserStat.objects.create(
-                channel=channel_tag,
-                proxy_id=proxy_id,
-                statistics={"started_count": count}
-            )
+
+        if not update and cus is None:
+            ChannelUserStat.objects.create(channel=channel_tag, users_sp=count)
 
     except Exception as e:
         logger.error(f"getting users count failed for {channel_tag} {e}")
@@ -54,7 +53,7 @@ def find_proxy(proxy):
             stat_text = client.get_messages('MTProxybot')[0].message
 
     except Exception as e:
-        logger.error(f"[{proxy.host} error: {e}")
+        logger.error(f"{proxy.host} error: {e}")
 
     return stat_text
 
@@ -157,15 +156,15 @@ def delete_proxy(session, api_id, api_hash, host, port):
 
 
 @shared_task(queue='telegram-mtproxy-bot')
-def set_promotion(proxies, channel):
+def set_promotion(slugs, channel):
     while cache.get(MTPROXYBOT_CACHE_NAME):
         sleep(1)
 
     cache.set(MTPROXYBOT_CACHE_NAME, True, MTPROXYBOT_CACHE_TIMEOUT)
 
-    for proxy_host in proxies:
+    for slug in slugs:
         try:
-            proxy = MTProxy.objects.get(host=proxy_host)
+            proxy = MTProxy.objects.get(slug=slug)
 
             with TelegramClient(proxy.owner.session, proxy.owner.api_id, proxy.owner.api_hash) as client:
                 client.send_message('MTProxybot', '/myproxies')
@@ -177,7 +176,7 @@ def set_promotion(proxies, channel):
 
                 previous_channel = cache.get(ck)
                 if previous_channel:
-                    channel_users_count(client, previous_channel, proxy.id, update=True)  # update ChannelUserStat
+                    channel_users_count(client, previous_channel, update=True)  # update ChannelUserStat
                     cache.delete(ck)
 
                 client(GetBotCallbackAnswerRequest(
@@ -188,14 +187,14 @@ def set_promotion(proxies, channel):
                 client.send_message('MTProxybot', channel)
                 logger.info(f"{proxy.host}:{proxy.port} SET FOR {channel}.")
 
-                channel_users_count(client, channel, proxy.id)  # create ChannelUserStat
+                channel_users_count(client, channel)  # create ChannelUserStat users_sp
                 cache.set(ck, channel, 60*60*24*7)  # keep cache for one week
 
-        except MTProxy.DoesNotExist():
-            logger.error(f"{proxy_host} not match query in MTProxy objects")
+        except MTProxy.DoesNotExist:
+            logger.error(f"{slug} not match query in MTProxy objects")
 
         except Exception as e:
-            logger.error(f"{proxy_host} NOT SET FOR {channel} {e}.")
+            logger.error(f"{slug} NOT SET FOR {channel} {e}.")
 
     cache.delete(MTPROXYBOT_CACHE_NAME)
 
@@ -242,7 +241,7 @@ def get_proxies_stat():
         logger.info(f'get stat for {proxy.host}')
         try:
             stat_text = find_proxy(proxy)
-            stat = (stat_text.split('\n')[11][11:]).replace(" ", "")
+            stat = stat_text[stat_text.index("Hourly stats:"):].splitlines()[2][11:].replace(" ", "")
             logger.info(f"{proxy.host} result: {stat}")
             number_of_users = int(stat)
 
@@ -260,19 +259,3 @@ def get_proxies_stat():
             continue
 
     cache.delete(MTPROXYBOT_CACHE_NAME)
-
-# try:
-#     stat_text = find_proxy(proxy)
-#     stat = (stat_text.split('\n')[11][11:]).replace(" ", "")
-#     logger.info(f"{proxy.host} result: {stat}")
-#     number_of_users = int(stat)
-#
-#     MTProxyStat.objects.using('telegram-mtproxy-bot').create(
-#         proxy=proxy,
-#         stat_message=stat_text,
-#         number_of_users=number_of_users,
-#     )
-# except IndexError:
-#     logger.error(f"{proxy.host} Index Error, text: {stat_text}")
-# except Exception as e:
-#     logger.error(f"{proxy.host} error: {e}")
