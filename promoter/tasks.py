@@ -23,22 +23,26 @@ def channel_users_stat(log):
     slugs = log.get("slugs")
 
     # create ChannelUserStat
-    if channel and create_users:
-        channel_user_stat = ChannelUserStat.objects.create(
-            channel=channel,
-            users_sp=create_users,
-            proxies=",".join(slugs)
-        )
-        # create ChannelStatProxy
-        for slug in slugs:
-            ChannelStatProxy.objects.create(channel_stat=channel_user_stat, proxy__slug=slug)
+    try:
+        if channel and create_users:
+            channel_user_stat = ChannelUserStat.objects.create(
+                channel=channel,
+                users_sp=create_users,
+                proxies=",".join(slugs)
+            )
+            # create ChannelStatProxy
+            for slug in slugs:
+                proxy = MTProxy.objects.get(slug=slug)
+                ChannelStatProxy.objects.create(channel_stat=channel_user_stat, proxy=proxy)
 
-    # update
-    for ch, stat in updates.items():
-        c = ChannelUserStat.objects.filter(channel=ch, users_ep__isnull=True).last()
-        if c:
-            c.users_ep = stat
-            c.save()
+        # update
+        for ch, stat in updates.items():
+            c = ChannelUserStat.objects.filter(channel=ch, users_ep__isnull=True).last()
+            if c:
+                c.users_ep = stat
+                c.save()
+    except Exception as e:
+        logger.error(f"error occurred when updating log: {log}\n {e}")
 
     # try:
     #     count = client(GetFullChannelRequest(channel_tag)).full_chat.participants_count
@@ -231,6 +235,7 @@ def set_promotion(slugs, channel):
             logger.error(f"{slug} NOT SET FOR {channel} {e}.")
 
     log["create"] = last_stat
+    print(log)
     channel_users_stat(log)
 
     cache.delete(MTPROXYBOT_CACHE_NAME)

@@ -103,7 +103,6 @@ def mtproxy_csv_import(request):
                         task="promoter.tasks.set_promotion",
                         one_off=date != "*",
                         queue="telegram-mtproxy-bot",
-                        # start_time=timezone.now(),
                         args=json.dumps([slugs, channel]),
                     )
                     if date == '*':
@@ -123,11 +122,33 @@ def mtproxy_csv_import(request):
     return TemplateResponse(request, 'admin/promoter/mtproxy/upload_csv.html', {'form': form})
 
 
+class ChannelStatProxyInline(admin.TabularInline):
+    @staticmethod
+    def channel(obj):
+        return obj.channel_stat.channel
+
+    @staticmethod
+    def users_sp(obj):
+        return obj.channel_stat.users_sp or 0
+
+    @staticmethod
+    def users_ep(obj):
+        return obj.channel_stat.users_ep or 0
+
+    model = ChannelStatProxy
+    readonly_fields = ['id', 'channel', 'users_sp', 'users_ep', 'created_time']
+    exclude = ['channel_stat']
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
 @admin.register(MTProxy)
 class MTProxyAdmin(admin.ModelAdmin):
     list_display = ['slug', 'host', 'port', 'is_enable', 'secret_key', 'proxy_tag']
     list_filter = ['is_enable', 'owner']
     search_fields = ['id', 'host', 'proxy_tag', 'secret_key']
+    inlines = [ChannelStatProxyInline]
 
     def get_urls(self):
         return [
