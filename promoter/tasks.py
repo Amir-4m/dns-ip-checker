@@ -17,28 +17,28 @@ MTPROXYBOT_CACHE_TIMEOUT = 600
 
 
 def channel_users_stat(log):
-    channel = log.get("channel")
+    channel = log.get("channel_tag")
+    create_users = log.get("create")
+    updates = log.get("update")
     slugs = log.get("slugs")
-    create_log = log.get("create")
 
     # create ChannelUserStat
-    channel_user_stat = ChannelUserStat.objects.create(
-        channel=channel,
-        users_sp=create_log,
-        proxies=",".join(slugs)
-    )
+    if channel and create_users:
+        channel_user_stat = ChannelUserStat.objects.create(
+            channel=channel,
+            users_sp=create_users,
+            proxies=",".join(slugs)
+        )
+        # create ChannelStatProxy
+        for slug in slugs:
+            ChannelStatProxy.objects.create(channel_stat=channel_user_stat, proxy__slug=slug)
 
     # update
-    updates = log.get("update")
-    for channel, stat in updates.items():
-        c = ChannelUserStat.objects.filter(channel=channel).last()
-        c.users_ep = stat
-        c.save()
-
-    # create ChannelStatProxy
-    for slug in slugs:
-        ChannelStatProxy.objects.create(channel_stat=channel_user_stat, proxy__slug=slug)
-
+    for ch, stat in updates.items():
+        c = ChannelUserStat.objects.filter(channel=ch, users_ep__isnull=True).last()
+        if c:
+            c.users_ep = stat
+            c.save()
 
     # try:
     #     count = client(GetFullChannelRequest(channel_tag)).full_chat.participants_count
@@ -207,7 +207,7 @@ def set_promotion(slugs, channel):
 
                 to_id, msg_id, button_number, previous_channel = find_proxy_in_pages(client, proxy.host)
 
-                if previous_channel not in log["update"]:
+                if previous_channel is not None and previous_channel not in log["update"]:
                     update_count = client(GetFullChannelRequest(previous_channel)).full_chat.participants_count
                     log["update"].update({previous_channel: update_count})
 
@@ -219,9 +219,8 @@ def set_promotion(slugs, channel):
                 client.send_message('MTProxybot', channel)
                 logger.info(f"{proxy.host}:{proxy.port} SET FOR {channel}.")
 
-                create_count = client(
-                    GetFullChannelRequest(channel)).full_chat.participants_count  # create ChannelUserStat users_sp
-
+                # create ChannelUserStat users_sp
+                create_count = client(GetFullChannelRequest(channel)).full_chat.participants_count
                 if create_count != last_stat:
                     last_stat = create_count
 
