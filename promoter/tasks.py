@@ -16,63 +16,6 @@ MTPROXYBOT_CACHE_NAME = 'telegram-mtproxy-bot-lock'
 MTPROXYBOT_CACHE_TIMEOUT = 600
 
 
-def channel_users_stat(log):
-    channel = log.get("channel_tag")
-    create_users = log.get("create")
-    updates = log.get("update")
-    slugs = log.get("slugs")
-
-    # create ChannelUserStat
-    try:
-        if channel and create_users:
-            channel_user_stat = ChannelUserStat.objects.create(
-                channel=channel,
-                users_sp=create_users,
-                proxies=",".join(slugs)
-            )
-            # create ChannelStatProxy
-            for slug in slugs:
-                proxy = MTProxy.objects.get(slug=slug)
-                ChannelStatProxy.objects.create(channel_stat=channel_user_stat, proxy=proxy)
-
-        # update
-        for ch, stat in updates.items():
-            c = ChannelUserStat.objects.filter(channel=ch, users_ep__isnull=True).last()
-            if c:
-                c.users_ep = stat
-                c.save()
-    except Exception as e:
-        logger.error(f"error occurred when updating log: {log}\n {e}")
-
-    # try:
-    #     count = client(GetFullChannelRequest(channel_tag)).full_chat.participants_count
-    #
-    #     if create:
-    #         cus, created = ChannelUserStat.objects.get_or_create(
-    #             channel=channel_tag,
-    #             users_ep=None,
-    #             defaults=dict(users_sp=count)
-    #         )
-    #
-    #         if created:
-    #             cache.set(f'channel_promoted_{cus.id}', True, 60 * 10)
-    #
-    #         ChannelStatProxy.objects.create(channel_stat=cus, proxy=proxy)
-    #
-    #     else:
-    #         cus = ChannelUserStat.objects.filter(
-    #             channel=channel_tag,
-    #             users_ep__isnull=True,
-    #         ).last()
-    #
-    #         if cus and not cache.get(f'channel_promoted_{cus.id}'):
-    #             cus.users_ep = count
-    #             cus.save()
-    #
-    # except Exception as e:
-    #     logger.error(f"getting users count failed for {channel_tag} {e}")
-
-
 def find_proxy(proxy):
     stat_text = ''
     try:
@@ -199,8 +142,8 @@ def set_promotion(slugs, channel):
 
     cache.set(MTPROXYBOT_CACHE_NAME, True, MTPROXYBOT_CACHE_TIMEOUT)
 
-    last_stat = 0
-    log = {"channel_tag": channel, "slugs": slugs, "update": {}}
+    create_stats = dict()
+    update_stats = dict()
     for slug in slugs:
         try:
             proxy = MTProxy.objects.get(slug=slug)
@@ -211,9 +154,11 @@ def set_promotion(slugs, channel):
 
                 to_id, msg_id, button_number, previous_channel = find_proxy_in_pages(client, proxy.host)
 
-                if previous_channel is not None and previous_channel not in log["update"]:
-                    update_count = client(GetFullChannelRequest(previous_channel)).full_chat.participants_count
-                    log["update"].update({previous_channel: update_count})
+                if previous_channel not in update_stats:
+                    try:
+                        update_stats[previous_channel] = client(GetFullChannelRequest(previous_channel)).full_chat.participants_count
+                    except Exception as e:
+                        logger.warning(f'Could not retrieve {previous_channel} stats, error: {e}')
 
                 client(GetBotCallbackAnswerRequest(
                     to_id,
@@ -224,21 +169,43 @@ def set_promotion(slugs, channel):
                 logger.info(f"{proxy.host}:{proxy.port} SET FOR {channel}.")
 
                 # create ChannelUserStat users_sp
-                create_count = client(GetFullChannelRequest(channel)).full_chat.participants_count
-                if create_count != last_stat:
-                    last_stat = create_count
+                if channel not in create_stats:
+                    create_stats[channel] = dict(
+                        count=client(GetFullChannelRequest(channel)).full_chat.participants_count,
+                        proxy_list=list()
+                    )
+
+                create_stats[channel]['proxy_list'].append(proxy)
 
         except MTProxy.DoesNotExist:
-            logger.error(f"{slug} not match query in MTProxy objects")
+            logger.warning(f"MTProxy {slug} not found")
 
         except Exception as e:
             logger.error(f"{slug} NOT SET FOR {channel} {e}.")
 
-    log["create"] = last_stat
-    print(log)
-    channel_users_stat(log)
-
     cache.delete(MTPROXYBOT_CACHE_NAME)
+
+    # create ChannelUserStat
+    cus_create_list = [ChannelUserStat(channel=k, users_sp=v['count']) for k, v in create_stats]
+    # ChannelUserStat.objects.bulk_create(cus_create_list)
+    for cus in cus_create_list:
+        try:
+            cus.save()
+            ChannelStatProxy.objects.bulk_create(
+                [ChannelStatProxy(channel_stat=cus, proxy=p) for p in create_stats[cus.channel]['proxy_list']]
+            )
+        except Exception as e:
+            logger.error(f"Create ChannelUserStat: {cus.channel}, error: {e}")
+
+    # update ChannelUserStat
+    for k, v in update_stats:
+        try:
+            c = ChannelUserStat.objects.filter(channel=k, users_ep__isnull=True).last()
+            if c is not None:
+                c.users_ep = v
+                c.save()
+        except Exception as e:
+            logger.error(f"Update ChannelUserStat: {k}, error: {e}")
 
 
 @shared_task(queue='telegram-mtproxy-bot')
