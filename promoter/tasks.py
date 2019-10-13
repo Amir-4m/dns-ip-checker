@@ -59,14 +59,16 @@ def find_proxy_in_pages(client, host, page=None):
                     res.id,
                     data=bytes(f"proxies/{button_number}", 'utf-8'),
                 ))
-                promoted_channel = None
+
                 try:
                     # save last promoted channel before change
                     promoted_channel = client.get_messages('@MTProxybot')[0].entities[2].url.split('/')[-1]
+                    promoted_channel = f'@{promoted_channel}'
                 except Exception as e:
+                    promoted_channel = ''
                     logger.error(f"getting previous channel failed for {host} {e}")
 
-                return res.to_id, res.id, button_number, f'@{promoted_channel}'
+                return res.to_id, res.id, button_number, promoted_channel
             if button.text == '»':
                 return find_proxy_in_pages(client, host, page=button.data)
 
@@ -154,11 +156,12 @@ def set_promotion(slugs, channel):
 
                 to_id, msg_id, button_number, previous_channel = find_proxy_in_pages(client, proxy.host)
 
-                if previous_channel not in update_stats:
+                if previous_channel and (previous_channel not in update_stats or not update_stats[previous_channel]):
+                    update_stats[previous_channel] = 0
                     try:
                         update_stats[previous_channel] = client(GetFullChannelRequest(previous_channel)).full_chat.participants_count
                     except Exception as e:
-                        logger.warning(f'Could not retrieve {previous_channel} stats, error: {e}')
+                        logger.warning(f'Could not retrieve {previous_channel} stats in update_stats, error: {e}')
 
                 client(GetBotCallbackAnswerRequest(
                     to_id,
@@ -168,14 +171,17 @@ def set_promotion(slugs, channel):
                 client.send_message('MTProxybot', channel)
                 logger.info(f"{proxy.host}:{proxy.port} SET FOR {channel}.")
 
-                # create ChannelUserStat users_sp
-                if channel not in create_stats:
-                    create_stats[channel] = dict(
-                        count=client(GetFullChannelRequest(channel)).full_chat.participants_count,
-                        proxy_list=list()
-                    )
+                if channel:
+                    if channel not in create_stats:
+                        create_stats[channel] = dict(proxy_list=list())
 
-                create_stats[channel]['proxy_list'].append(proxy)
+                    create_stats[channel]['proxy_list'].append(proxy)
+
+                    if 'count' not in create_stats[channel]:
+                        try:
+                            create_stats[channel]['count'] = client(GetFullChannelRequest(channel)).full_chat.participants_count,
+                        except Exception as e:
+                            logger.warning(f'Could not retrieve {channel} stats in create_stats, error: {e}')
 
         except MTProxy.DoesNotExist:
             logger.warning(f"MTProxy {slug} not found")
@@ -255,7 +261,7 @@ def get_proxies_stat():
             number_of_users = int(stat)
 
             MTProxyStat.objects.using('telegram-mtproxy-bot').create(
-                promoted_channel=channel or '',
+                promoted_channel=channel,
                 proxy=proxy,
                 stat_message=stat_text,
                 number_of_users=number_of_users,
