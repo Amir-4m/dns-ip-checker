@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 @shared_task(queue='telegram')
 def send_confirm_code(api_id, api_hash, number):
     try:
-        session = f"{TELEGRAM_SESSION_DIR}/{api_id}.session"
+        session = f"{TELEGRAM_SESSION_DIR}{api_id}.session"
         client = TelegramClient(session, api_id, api_hash)
         client.connect()
         res = client.send_code_request(number)
@@ -28,7 +28,7 @@ def send_confirm_code(api_id, api_hash, number):
 
 @shared_task(queue='telegram')
 def login(api_id, api_hash, number, code, password):
-    session = f"{TELEGRAM_SESSION_DIR}/{api_id}.session"
+    session = f"{TELEGRAM_SESSION_DIR}{api_id}.session"
     client = TelegramClient(session, api_id, api_hash)
 
     try:

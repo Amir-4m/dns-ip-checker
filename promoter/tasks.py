@@ -179,7 +179,7 @@ def set_promotion(slugs, channel):
 
                     if 'count' not in create_stats[channel]:
                         try:
-                            create_stats[channel]['count'] = client(GetFullChannelRequest(channel)).full_chat.participants_count,
+                            create_stats[channel]['count'] = client(GetFullChannelRequest(channel)).full_chat.participants_count
                         except Exception as e:
                             logger.warning(f'Could not retrieve {channel} stats in create_stats, error: {e}')
 
@@ -192,7 +192,8 @@ def set_promotion(slugs, channel):
     cache.delete(MTPROXYBOT_CACHE_NAME)
 
     # create ChannelUserStat
-    cus_create_list = [ChannelUserStat(channel=k, users_sp=v['count']) for k, v in create_stats]
+    print(create_stats)
+    cus_create_list = [ChannelUserStat(channel=k, users_sp=v['count']) for k, v in create_stats.items()]
     # ChannelUserStat.objects.bulk_create(cus_create_list)
     for cus in cus_create_list:
         try:
@@ -204,7 +205,9 @@ def set_promotion(slugs, channel):
             logger.error(f"Create ChannelUserStat: {cus.channel}, error: {e}")
 
     # update ChannelUserStat
-    for k, v in update_stats:
+    print(update_stats)
+    print(update_stats.items())
+    for k, v in update_stats.items():
         try:
             c = ChannelUserStat.objects.filter(channel=k, users_ep__isnull=True).last()
             if c is not None:

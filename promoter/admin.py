@@ -175,7 +175,7 @@ class MTProxyStatAdmin(admin.ModelAdmin):
 
 @admin.register(ChannelUserStat)
 class ChannelUserStatAdmin(admin.ModelAdmin):
-    list_display = ["channel", "created_time", "users_sp", "users_ep", "proxies"]
+    list_display = ["channel", "created_time", "users_sp", "users_ep"]
     list_filter = ["created_time", "channel"]
     search_fields = ["channel"]
     list_per_page = 500
